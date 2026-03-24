@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 6953801097595837176}
   - component: {fileID: 2404012454648190106}
   m_Layer: 0
-  m_Name: Sphere
+  m_Name: ball
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -227,3 +227,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableItem
   ShowTopMostFoldoutHeaderGroup: 1
+  itemData: {fileID: 11400000, guid: 4310f5a85862a9343bb1e0a873aca5dc, type: 2}

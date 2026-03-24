@@ -10,22 +10,29 @@ public class PlayerController : NetworkBehaviour
     public float jumpForce = 5f;
     public float gravity = -9.81f;
     public Animator animator;
+    
     [Header("Camera Settings")]
     public float cameraDistance = 5f;
     public float mouseSensitivity = 3f;
     public float minPitch = -20f;
     public float maxPitch = 60f;
     public Vector3 targetOffset = new Vector3(0, 1.5f, 0);
+    
     [Header("Pick & Throw Settings")]
     public Transform handPoint; 
     public float pickupRange = 2f;
     public float throwForce = 15f;
+    
     private NetworkObject currentItem;
     private Camera mainCamera;
     private float yaw = 0f;
     private float pitch = 20f;
     private float verticalVelocity = 0f;
     private CharacterController controller; 
+
+    public float fallDeathY = -15f;
+    private Vector3 impact = Vector3.zero;
+
     public override void OnNetworkSpawn()
     {
         controller = GetComponent<CharacterController>();
@@ -36,59 +43,110 @@ public class PlayerController : NetworkBehaviour
             Cursor.visible = false;
         }
     }
+
     void Update() 
     {
         if (!IsOwner) return;
+
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+        
+        if (!IsOwner) return;
+
+      
+        if (mainCamera == null) 
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null) return; 
+        }
+        
+        yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+        pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+        if (transform.position.y < fallDeathY)
+            
+        {
+            FallDeathServerRpc(); 
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null)
         {
             TryPickupItem();
         }
+
         if (Input.GetButtonDown("Fire1") && currentItem != null)
         {
             ThrowItemServerRpc(mainCamera.transform.forward);
         }
+
         if (controller.isGrounded && verticalVelocity < 0)
         {
             verticalVelocity = -2f; 
         }
+
         if (Input.GetButtonDown("Jump") && controller.isGrounded)
         {
             verticalVelocity = jumpForce;
         }
+
         verticalVelocity += gravity * Time.deltaTime;
+
         float x = Input.GetAxis("Horizontal"); 
         float z = Input.GetAxis("Vertical");   
         Vector3 moveInput = new Vector3(x, 0f, z).normalized;
         Vector3 moveDirection = Vector3.zero;
+
         if (moveInput.magnitude >= 0.1f && mainCamera != null)
         {
             Vector3 cameraForward = mainCamera.transform.forward;
             Vector3 cameraRight = mainCamera.transform.right;
             cameraForward.y = 0; cameraRight.y = 0;
             cameraForward.Normalize(); cameraRight.Normalize();
+
             moveDirection = (cameraForward * moveInput.z + cameraRight * moveInput.x).normalized;
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
+
+     
+        if (impact.magnitude > 0.2f) 
+        {
+            controller.Move(impact * Time.deltaTime);
+            impact = Vector3.Lerp(impact, Vector3.zero, 5f * Time.deltaTime);
+        }
+
         Vector3 finalMovement = moveDirection * moveSpeed;
         finalMovement.y = verticalVelocity; 
         controller.Move(finalMovement * Time.deltaTime);
+
         if (animator != null)
         {
             animator.SetFloat("Speed", moveInput.magnitude); 
         }
     }
+
     void LateUpdate()
     {
-        if (!IsOwner || mainCamera == null) return;
+        if (!IsOwner) return;
+
+        // 🌟 2. เพิ่มเช็คตรงนี้ด้วยเหมือนกัน
+        if (mainCamera == null) mainCamera = Camera.main;
+        if (mainCamera == null) return;
         Quaternion camRotation = Quaternion.Euler(pitch, yaw, 0);
         Vector3 lookAtPosition = transform.position + targetOffset;
         mainCamera.transform.position = lookAtPosition - (camRotation * Vector3.forward * cameraDistance);
         mainCamera.transform.LookAt(lookAtPosition);
     }
+
+ 
+    public void AddImpact(Vector3 force) 
+    {
+        impact += force;
+      
+        if (force.y > 0) verticalVelocity = force.y; 
+    }
+
     void TryPickupItem()
     {
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, pickupRange);
@@ -105,6 +163,7 @@ public class PlayerController : NetworkBehaviour
             }
         }
     }
+
     [ServerRpc]
     void PickupItemServerRpc(ulong itemNetworkId)
     {
@@ -114,6 +173,7 @@ public class PlayerController : NetworkBehaviour
             SetCurrentItemClientRpc(itemNetworkId);
         }
     }
+
     [ClientRpc]
     void SetCurrentItemClientRpc(ulong itemNetworkId)
     {
@@ -122,6 +182,7 @@ public class PlayerController : NetworkBehaviour
             currentItem = itemObj;
         }
     }
+
     [ServerRpc]
     void ThrowItemServerRpc(Vector3 aimDirection)
     {
@@ -131,9 +192,18 @@ public class PlayerController : NetworkBehaviour
             ClearItemClientRpc();
         }
     }
+
     [ClientRpc]
     void ClearItemClientRpc()
     {
         currentItem = null;
+    }
+    [ServerRpc]
+    void FallDeathServerRpc()
+    {
+        if (TryGetComponent(out PlayerHealth health))
+        {
+            health.Die(); // สั่งให้ตาย
+        }
     }
 }
