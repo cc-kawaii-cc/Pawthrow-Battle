@@ -19,33 +19,27 @@ public class NetworkManagerUI : MonoBehaviour
 
     private void Awake() 
     {
-        
         for (int i = 0; i < charButtons.Length; i++)
         {
             int index = i; 
             charButtons[i].onClick.AddListener(() => 
             {
                 selectedCharIndex = index;
-                Debug.Log("เลือกตัวละครที่: " + index);
+                Debug.Log("Choose a character: " + index);
             });
         }
 
-      
         hostBtn.onClick.AddListener(() => 
         {
-           
             NetworkManager.Singleton.NetworkConfig.ConnectionData = System.BitConverter.GetBytes(selectedCharIndex);
-            
             SetupApprovalCallback(); 
             NetworkManager.Singleton.StartHost();
             NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
             HideUI();
         });
 
-       
         clientBtn.onClick.AddListener(() => 
         {
-       
             NetworkManager.Singleton.NetworkConfig.ConnectionData = System.BitConverter.GetBytes(selectedCharIndex);
             NetworkManager.Singleton.StartClient();
             HideUI();
@@ -60,32 +54,31 @@ public class NetworkManagerUI : MonoBehaviour
         });
     }
 
-    
     private void SetupApprovalCallback()
     {
+        NetworkManager.Singleton.NetworkConfig.ConnectionApproval = true;
+        uint[] characterHashes = new uint[playerPrefabs.Length];
+        for (int i = 0; i < playerPrefabs.Length; i++)
+        {
+            characterHashes[i] = playerPrefabs[i].GetComponent<NetworkObject>().PrefabIdHash;
+        }
+
         NetworkManager.Singleton.ConnectionApprovalCallback = (request, response) =>
         {
-          
             int charIndex = 0;
             if (request.Payload != null && request.Payload.Length > 0)
             {
                 charIndex = System.BitConverter.ToInt32(request.Payload, 0);
             }
 
-           
-            if (charIndex < 0 || charIndex >= playerPrefabs.Length) {
+            if (charIndex < 0 || charIndex >= characterHashes.Length) 
+            {
                 charIndex = 0; 
             }
-
-            
-            uint prefabHash = playerPrefabs[charIndex].GetComponent<NetworkObject>().PrefabIdHash;
-
             
             response.Approved = true;
             response.CreatePlayerObject = true;
-            response.PlayerPrefabHash = prefabHash;
-            
-            
+            response.PlayerPrefabHash = characterHashes[charIndex];
             response.Position = new Vector3(0, 5, 0); 
             response.Rotation = Quaternion.identity;
         };

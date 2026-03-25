@@ -202,7 +202,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableItem
   ShowTopMostFoldoutHeaderGroup: 1
-  itemData: {fileID: 0}
+  itemData: {fileID: 11400000, guid: a195eabaf8025f54ba02fd2c61c7aa75, type: 2}
 --- !u!54 &7765647323979560334
 Rigidbody:
   m_ObjectHideFlags: 0
