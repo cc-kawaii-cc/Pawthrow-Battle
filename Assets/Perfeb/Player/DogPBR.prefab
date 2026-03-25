@@ -1677,6 +1677,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   ShowTopMostFoldoutHeaderGroup: 1
+  characterType: 0
+  isShieldActive:
+    m_InternalValue: 0
+  shieldCooldown: 5
+  shieldVisual: {fileID: 8845912188884468465}
+  dashForce: 20
+  dashCooldown: 3
   moveSpeed: 5
   rotationSpeed: 700
   jumpForce: 5
@@ -1690,6 +1697,7 @@ MonoBehaviour:
   handPoint: {fileID: 1418516356672838363}
   pickupRange: 2
   throwForce: 15
+  maxChargeTime: 2
   fallDeathY: -15
 --- !u!114 &3584425320675687050
 MonoBehaviour:
@@ -2972,6 +2980,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 588cb1a3084bba747b81631d0c071523, type: 3}
+--- !u!1 &8845912188884468465 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100000, guid: 588cb1a3084bba747b81631d0c071523, type: 3}
+  m_PrefabInstance: {fileID: 8845912188884370513}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8845912188884770513 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 588cb1a3084bba747b81631d0c071523, type: 3}

@@ -509,7 +509,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &972839184
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1039,6 +1039,7 @@ MonoBehaviour:
   itemPrefabs:
   - {fileID: 4197145092691596506, guid: d46f4ce06a4cf104ea76c00b3e72a7c5, type: 3}
   - {fileID: 3593321760191612671, guid: 3f54b558bce65b548bed4a60fa3b90ad, type: 3}
+  - {fileID: 6074613081059060313, guid: 07e9e43e35ee5bf468bffd52e49560ec, type: 3}
   spawnInterval: 5
   spawnCenter: {x: 0, y: 0, z: 0}
   spawnAreaSize: {x: 25, y: 25}

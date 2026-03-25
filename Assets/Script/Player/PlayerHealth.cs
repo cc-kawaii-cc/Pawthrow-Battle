@@ -6,22 +6,38 @@ public class PlayerHealth : NetworkBehaviour
     public NetworkVariable<float> currentHealth = new NetworkVariable<float>(100f);
     private CharacterController controller;
 
-    void Awake() 
-    {
+    void Awake() {
         controller = GetComponent<CharacterController>();
     }
-    public void TakeDamage(float amount, float knockback, Vector3 direction) 
+
+    public bool TakeDamage(float amount, float knockback, Vector3 direction) 
     {
-        if (!IsServer) return;
+        if (!IsServer) return false;
+        if (TryGetComponent(out PlayerController playerController)) 
+        {
+            if (playerController.isShieldActive.Value) 
+            {
+                Debug.Log($"Player {OwnerClientId} Use the shield to block the attack!");
+                playerController.BreakShieldServerRpc(); 
+                return false;
+            }
+        }
+        
         currentHealth.Value -= amount;
         Debug.Log($"Player {OwnerClientId} HP: {currentHealth.Value}");
         ApplyKnockbackClientRpc(direction * knockback);
-        if (currentHealth.Value <= 0) {
+        if (currentHealth.Value <= 0)
+        {
             Die();
         }
+        
+        return true; 
     }
-    public void Die() {
+
+    public void Die() 
+    {
         if (!IsServer) return; 
+
         Debug.Log($"Player {OwnerClientId} Died!");
         PlayerDiedClientRpc();
         GetComponent<NetworkObject>().Despawn(true);
@@ -31,6 +47,7 @@ public class PlayerHealth : NetworkBehaviour
     void PlayerDiedClientRpc()
     {
         if (!IsOwner) return;
+
         Camera mainCam = Camera.main;
         if (mainCam != null)
         {
@@ -40,6 +57,7 @@ public class PlayerHealth : NetworkBehaviour
                 mainCam.gameObject.AddComponent<SpectatorCameraController>();
             }
         }
+
         GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
         if (menuUI != null)
         {
@@ -59,9 +77,6 @@ public class PlayerHealth : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (currentHealth.Value > 0)
-        {
-            
-        }
+        
     }
 }

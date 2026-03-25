@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ea2b46b2485c454b846e6568a0444ce, type: 3}
-  m_Name: BallData
+  m_Name: CylinderData
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  damage: 20
-  knockbackForce: 75
-  isHeavyItem: 0
+  damage: 50
+  knockbackForce: 50
+  isHeavyItem: 1
   stunDuration: 2

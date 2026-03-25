@@ -594,7 +594,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 901806748
+  GlobalObjectIdHash: 4072139161
   InScenePlacedSourceGlobalObjectIdHash: 4072139161
   DeferredDespawnTick: 0
   Ownership: 1
@@ -620,6 +620,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   ShowTopMostFoldoutHeaderGroup: 1
+  characterType: 1
+  isShieldActive:
+    m_InternalValue: 0
+  shieldCooldown: 5
+  shieldVisual: {fileID: 0}
+  dashForce: 20
+  dashCooldown: 3
   moveSpeed: 5
   rotationSpeed: 700
   jumpForce: 5
@@ -633,6 +640,7 @@ MonoBehaviour:
   handPoint: {fileID: 6774241186092290283}
   pickupRange: 2
   throwForce: 15
+  maxChargeTime: 2
   fallDeathY: -15
 --- !u!114 &1025844716119186729
 MonoBehaviour:
