@@ -909,7 +909,13 @@ PlayerSettings:
   XboxOneOverrideIdentityName: 
   XboxOneOverrideIdentityPublisher: 
   vrEditorSettings: {}
-  cloudServicesEnabled: {}
+  cloudServicesEnabled:
+    Build: 0
+    Game Performance: 0
+    Legacy Analytics: 0
+    Purchasing: 0
+    UDP: 0
+    Unity Ads: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 
@@ -931,11 +937,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 2cbc0bec-5657-4e68-ac66-e391419f3191
+  cloudProjectId: 0ee9e694-8567-44c4-8d94-41aeb8a07e77
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Netcode_FinalProject
-  organizationId: champking546
+  projectName: Pawthrow_Battle
+  organizationId: krichzz
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

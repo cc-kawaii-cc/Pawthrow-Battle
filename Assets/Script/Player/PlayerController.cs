@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using System.Collections;
+using Unity.Services.Analytics;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : NetworkBehaviour 
@@ -135,6 +136,17 @@ public class PlayerController : NetworkBehaviour
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
+
+            // บันทึกข้อมูล Analytics เมื่อมีการปาไอเทม
+            if (currentItem != null)
+            {
+                ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
+                if (itemComponent != null && itemComponent.itemData != null)
+                {
+                    RecordItemUsedAnalytics(itemComponent.itemData.name);
+                }
+            }
+
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
         }
         
@@ -267,5 +279,22 @@ public class PlayerController : NetworkBehaviour
     void FallDeathServerRpc()
     {
         if (TryGetComponent(out PlayerHealth health)) health.Die(); 
+    }
+
+    private void RecordItemUsedAnalytics(string itemName)
+    {
+        try
+        {
+            CustomEvent itemEvent = new CustomEvent("item_used")
+            {
+                { "item_name", itemName }
+            };
+            AnalyticsService.Instance.RecordEvent(itemEvent);
+            AnalyticsService.Instance.Flush(); // <--- เพิ่มบรรทัดนี้เพื่อบังคับส่งข้อมูลทันที
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("Analytics Error: " + e.Message);
+        }
     }
 }
