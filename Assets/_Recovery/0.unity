@@ -1224,7 +1224,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 330663302
+  GlobalObjectIdHash: 1413274978
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -1658,7 +1658,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameMenuUI
   gameOverPanel: {fileID: 972839183}
   gameWinPanel: {fileID: 1392454312}
-  winnerText: {fileID: 0}
+  winnerText: {fileID: 1691949860}
 --- !u!114 &1989142601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1671,7 +1671,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3974979542
+  GlobalObjectIdHash: 4255513584
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1

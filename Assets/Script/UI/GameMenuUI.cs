@@ -1,16 +1,17 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
+using TMPro; 
 
 public class GameMenuUI : MonoBehaviour
 {
     [Header("UI Panels")]
     public GameObject gameOverPanel;
-    public GameObject gameWinPanel;
+    public GameObject gameWinPanel; 
 
     [Header("UI Text")]
-    public TextMeshProUGUI winnerText;
+    public TextMeshProUGUI winnerText; 
+    private bool isGameEnded = false; 
 
     void Start()
     {
@@ -35,6 +36,9 @@ public class GameMenuUI : MonoBehaviour
 
     public void ShowGameOver()
     {
+        if (isGameEnded) return;
+        if (gameWinPanel != null && gameWinPanel.activeSelf) return;
+
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(true);
@@ -42,9 +46,10 @@ public class GameMenuUI : MonoBehaviour
             Cursor.visible = true;
         }
     }
-    
+
     public void ShowGameWin(string winnerName)
     {
+        isGameEnded = true;
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (gameWinPanel != null)
         {

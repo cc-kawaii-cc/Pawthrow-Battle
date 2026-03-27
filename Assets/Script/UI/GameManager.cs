@@ -6,45 +6,31 @@ using System.Collections.Generic;
 public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance;
-    
     [Header("Game State")]
-    private List<PlayerController> alivePlayers = new List<PlayerController>();
     private bool isGameOver = false;
-
     private void Awake()
     {
         if (Instance == null) Instance = this;
     }
-    public void RegisterPlayer(PlayerController player)
-    {
-        if (!IsServer) return;
-        
-        if (!alivePlayers.Contains(player))
-        {
-            alivePlayers.Add(player);
-            Debug.Log($"[GameManager] Player joined. Total alive: {alivePlayers.Count}");
-        }
-    }
     public void OnPlayerDied(PlayerController deadPlayer)
     {
         if (!IsServer || isGameOver) return;
-        if (alivePlayers.Contains(deadPlayer))
+        PlayerController[] allPlayersInMap = FindObjectsOfType<PlayerController>();
+        List<PlayerController> alivePlayers = new List<PlayerController>();
+        foreach (PlayerController p in allPlayersInMap)
         {
-            alivePlayers.Remove(deadPlayer);
-            Debug.Log($"[GameManager] Player died. Total alive: {alivePlayers.Count}");
+            if (p != deadPlayer && p.gameObject.activeInHierarchy)
+            {
+                alivePlayers.Add(p);
+            }
         }
-
-        CheckWinCondition();
-    }
-
-    private void CheckWinCondition()
-    {
+        Debug.Log($"[GameManager] A player died. Remaining alive players: {alivePlayers.Count}");
         if (alivePlayers.Count == 1)
         {
             isGameOver = true;
             PlayerController winner = alivePlayers[0];
             string winnerCharType = winner.characterType.ToString();
-            DeclareWinnerClientRpc(winnerCharType);
+            DeclareWinnerClientRpc(winnerCharType, winner.NetworkObjectId);
         }
         else if (alivePlayers.Count == 0 && !isGameOver)
         {
@@ -54,17 +40,38 @@ public class GameManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void DeclareWinnerClientRpc(string winnerCharType)
+    private void DeclareWinnerClientRpc(string winnerCharType, ulong winnerNetworkObjectId)
     {
-        Debug.Log("🏆 Game Over! Winner is: " + winnerCharType);
+        Debug.Log("Game Over! Winner is: " + winnerCharType);
         RecordGameWinAnalytics(winnerCharType);
-
-        // TODO: You can add the code to open the results summary UI window or a button to return to the menu here
+        GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
+        if (menuUI != null)
+        {
+            menuUI.ShowGameWin(winnerCharType);
+        }
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(winnerNetworkObjectId, out NetworkObject winnerObj))
+        {
+            Transform winnerTransform = winnerObj.transform;
+            Camera mainCam = Camera.main;
+            if (mainCam != null)
+            {
+                if (mainCam.TryGetComponent(out SpectatorCameraController spectator))
+                {
+                    spectator.enabled = false;
+                }
+                WinnerLockOnCamera lockOnCam = mainCam.GetComponent<WinnerLockOnCamera>();
+                if (lockOnCam == null)
+                {
+                    lockOnCam = mainCam.gameObject.AddComponent<WinnerLockOnCamera>();
+                }
+                lockOnCam.SetTarget(winnerTransform);
+            }
+        }
     }
-
     private void RecordGameWinAnalytics(string characterName)
     {
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
+
         try
         {
             CustomEvent winEvent = new CustomEvent("game_win")
@@ -73,7 +80,6 @@ public class GameManager : NetworkBehaviour
             };
             AnalyticsService.Instance.RecordEvent(winEvent);
             AnalyticsService.Instance.Flush();
-            Debug.Log("Sent Analytics Event: game_win -> " + characterName);
         }
         catch (System.Exception e)
         {
