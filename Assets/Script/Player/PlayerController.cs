@@ -56,6 +56,7 @@ public class PlayerController : NetworkBehaviour
 
     public float fallDeathY = -15f;
     private Vector3 impact = Vector3.zero;
+    private bool isDead = false;
 
     public override void OnNetworkSpawn()
     {
@@ -71,28 +72,25 @@ public class PlayerController : NetworkBehaviour
     void Update() 
     {
         if (!IsOwner) return;
-
         if (mainCamera == null) 
         {
             mainCamera = Camera.main;
             if (mainCamera == null) return; 
         }
-        
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
-
-        if (transform.position.y < fallDeathY) 
+        if (transform.position.y < fallDeathY && !isDead) 
         {
-            FallDeathServerRpc(); return;
+            isDead = true; 
+            FallDeathServerRpc(); 
+            return;
         }
-
         if (impact.magnitude > 0.2f) 
         {
             controller.Move(impact * Time.deltaTime);
             impact = Vector3.Lerp(impact, Vector3.zero, 5f * Time.deltaTime);
         }
-
         if (isStunned) 
         {
             if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
@@ -101,10 +99,8 @@ public class PlayerController : NetworkBehaviour
             if (animator != null) animator.SetFloat("Speed", 0);
             return; 
         }
-        
         if (shieldTimer > 0) shieldTimer -= Time.deltaTime;
         if (dashTimer > 0) dashTimer -= Time.deltaTime;
-        
         if (characterType == CharacterType.DogKnight)
         {
             if (Input.GetButtonDown("Fire2") && shieldTimer <= 0 && !isShieldActive.Value)
@@ -121,9 +117,7 @@ public class PlayerController : NetworkBehaviour
                 dashTimer = dashCooldown;
             }
         }
-        
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
-
         if (Input.GetButtonDown("Fire1") && currentItem != null)
         {
             isCharging = true; currentCharge = 0f;
@@ -136,8 +130,6 @@ public class PlayerController : NetworkBehaviour
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
-
-            // บันทึกข้อมูล Analytics เมื่อมีการปาไอเทม
             if (currentItem != null)
             {
                 ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
@@ -146,26 +138,21 @@ public class PlayerController : NetworkBehaviour
                     RecordItemUsedAnalytics(itemComponent.itemData.name);
                 }
             }
-
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
         }
-        
         if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
         if (Input.GetButtonDown("Jump") && controller.isGrounded) verticalVelocity = jumpForce;
         verticalVelocity += gravity * Time.deltaTime;
-
         float x = Input.GetAxis("Horizontal"); 
         float z = Input.GetAxis("Vertical");   
         Vector3 moveInput = new Vector3(x, 0f, z).normalized;
         Vector3 moveDirection = Vector3.zero;
-
         if (moveInput.magnitude >= 0.1f && mainCamera != null) 
         {
             Vector3 cameraForward = mainCamera.transform.forward;
             Vector3 cameraRight = mainCamera.transform.right;
             cameraForward.y = 0; cameraRight.y = 0;
             cameraForward.Normalize(); cameraRight.Normalize();
-
             moveDirection = (cameraForward * moveInput.z + cameraRight * moveInput.x).normalized;
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
@@ -174,15 +161,13 @@ public class PlayerController : NetworkBehaviour
         Vector3 finalMovement = moveDirection * moveSpeed;
         finalMovement.y = verticalVelocity; 
         controller.Move(finalMovement * Time.deltaTime);
-
         if (animator != null) animator.SetFloat("Speed", moveInput.magnitude); 
     }
 
     void LateUpdate()
     {
-        if (!IsOwner) return;
+        if (!IsOwner || !IsSpawned) return; 
         if (mainCamera == null) return;
-
         Quaternion camRotation = Quaternion.Euler(pitch, yaw, 0);
         Vector3 lookAtPosition = transform.position + targetOffset;
         mainCamera.transform.position = lookAtPosition - (camRotation * Vector3.forward * cameraDistance);
@@ -230,10 +215,15 @@ public class PlayerController : NetworkBehaviour
 
     private IEnumerator StunRoutine(float duration) 
     {
-        isStunned = true; yield return new WaitForSeconds(duration); isStunned = false; 
+        isStunned = true; 
+        isCharging = false; 
+        currentCharge = 0f;
+        yield return new WaitForSeconds(duration); 
+        isStunned = false; 
     }
 
-    void TryPickupItem() {
+    void TryPickupItem() 
+    {
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, pickupRange);
         foreach (var hitCollider in hitColliders) 
         {
@@ -247,7 +237,6 @@ public class PlayerController : NetworkBehaviour
             }
         }
     }
-
     [ServerRpc] void PickupItemServerRpc(ulong itemNetworkId) 
     {
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemNetworkId, out NetworkObject itemObj)) 
@@ -268,13 +257,11 @@ public class PlayerController : NetworkBehaviour
             ClearItemClientRpc();
         }
     }
-
     [ClientRpc]
     void ClearItemClientRpc()
     {
         currentItem = null; 
     }
-
     [ServerRpc]
     void FallDeathServerRpc()
     {
@@ -283,6 +270,7 @@ public class PlayerController : NetworkBehaviour
 
     private void RecordItemUsedAnalytics(string itemName)
     {
+        if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
         try
         {
             CustomEvent itemEvent = new CustomEvent("item_used")
@@ -290,7 +278,7 @@ public class PlayerController : NetworkBehaviour
                 { "item_name", itemName }
             };
             AnalyticsService.Instance.RecordEvent(itemEvent);
-            AnalyticsService.Instance.Flush(); // <--- เพิ่มบรรทัดนี้เพื่อบังคับส่งข้อมูลทันที
+            AnalyticsService.Instance.Flush(); 
         }
         catch (System.Exception e)
         {

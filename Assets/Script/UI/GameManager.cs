@@ -8,10 +8,12 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance;
     [Header("Game State")]
     private bool isGameOver = false;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
     }
+
     public void OnPlayerDied(PlayerController deadPlayer)
     {
         if (!IsServer || isGameOver) return;
@@ -21,7 +23,11 @@ public class GameManager : NetworkBehaviour
         {
             if (p != deadPlayer && p.gameObject.activeInHierarchy)
             {
-                alivePlayers.Add(p);
+                PlayerHealth health = p.GetComponent<PlayerHealth>();
+                if (health != null && health.currentHealth.Value > 0)
+                {
+                    alivePlayers.Add(p);
+                }
             }
         }
         Debug.Log($"[GameManager] A player died. Remaining alive players: {alivePlayers.Count}");
@@ -30,6 +36,7 @@ public class GameManager : NetworkBehaviour
             isGameOver = true;
             PlayerController winner = alivePlayers[0];
             string winnerCharType = winner.characterType.ToString();
+            
             DeclareWinnerClientRpc(winnerCharType, winner.NetworkObjectId);
         }
         else if (alivePlayers.Count == 0 && !isGameOver)
@@ -38,11 +45,10 @@ public class GameManager : NetworkBehaviour
             Debug.Log("Draw! Everyone died.");
         }
     }
-
     [ClientRpc]
     private void DeclareWinnerClientRpc(string winnerCharType, ulong winnerNetworkObjectId)
     {
-        Debug.Log("Game Over! Winner is: " + winnerCharType);
+        Debug.Log("🏆 Game Over! Winner is: " + winnerCharType);
         RecordGameWinAnalytics(winnerCharType);
         GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
         if (menuUI != null)
@@ -68,10 +74,11 @@ public class GameManager : NetworkBehaviour
             }
         }
     }
+
     private void RecordGameWinAnalytics(string characterName)
     {
+        if (!IsServer) return;
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
-
         try
         {
             CustomEvent winEvent = new CustomEvent("game_win")
