@@ -11,6 +11,8 @@ public class GameMenuUI : MonoBehaviour
 
     [Header("UI Text")]
     public TextMeshProUGUI winnerText; 
+    public TextMeshProUGUI matchStatsText;
+
     private bool isGameEnded = false; 
 
     void Start()
@@ -21,16 +23,8 @@ public class GameMenuUI : MonoBehaviour
 
     public void LeaveGame()
     {
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.Shutdown();
-        }
-        
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.gameObject != null)
-        {
-            Destroy(NetworkManager.Singleton.gameObject);
-        }
-        
+        if (NetworkManager.Singleton != null) NetworkManager.Singleton.Shutdown();
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.gameObject != null) Destroy(NetworkManager.Singleton.gameObject);
         SceneManager.LoadScene("MainMenu"); 
     }
 
@@ -42,24 +36,23 @@ public class GameMenuUI : MonoBehaviour
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(true);
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
         }
     }
 
-    public void ShowGameWin(string winnerName)
+    public void ShowGameWin(string winnerName, string matchStats = "")
     {
         isGameEnded = true;
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
+
         if (gameWinPanel != null)
         {
             gameWinPanel.SetActive(true);
-            if (winnerText != null)
-            {
-                winnerText.text = "WINNER\n" + winnerName;
-            }
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            
+            if (winnerText != null) winnerText.text = "WINNER\n" + winnerName;
+            if (matchStatsText != null) matchStatsText.text = matchStats;
+
+            Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
         }
     }
 }

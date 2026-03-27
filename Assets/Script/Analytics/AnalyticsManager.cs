@@ -7,7 +7,7 @@ public class AnalyticsManager : MonoBehaviour
     public static AnalyticsManager Instance { get; private set; }
 
     [Header("Debug Settings")]
-    [Tooltip("Uncheck the box if you want to actually send Analytics data")]
+    [Tooltip("Uncheck this box when you want to send Analytics data to the actual dashboard")]
     public bool disableAnalyticsForTesting = true;
 
     private void Awake()
@@ -33,7 +33,6 @@ public class AnalyticsManager : MonoBehaviour
         {
             await UnityServices.InitializeAsync();
             AnalyticsService.Instance.StartDataCollection();
-            
             Debug.Log("Unity Analytics Initialized Successfully!");
         }
         catch (System.Exception e)

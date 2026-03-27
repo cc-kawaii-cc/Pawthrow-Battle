@@ -8,7 +8,7 @@ public class PlayerController : NetworkBehaviour
 {
     public enum CharacterType { DogKnight, NekoCat }
 
-    [Header("Character Skills ")]
+    [Header("Character Skills")]
     public CharacterType characterType = CharacterType.DogKnight;
     
     [Header("Dog Skill (Shield)")]
@@ -72,25 +72,30 @@ public class PlayerController : NetworkBehaviour
     void Update() 
     {
         if (!IsOwner) return;
+
         if (mainCamera == null) 
         {
             mainCamera = Camera.main;
             if (mainCamera == null) return; 
         }
+        
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
         if (transform.position.y < fallDeathY && !isDead) 
         {
             isDead = true; 
             FallDeathServerRpc(); 
             return;
         }
+
         if (impact.magnitude > 0.2f) 
         {
             controller.Move(impact * Time.deltaTime);
             impact = Vector3.Lerp(impact, Vector3.zero, 5f * Time.deltaTime);
         }
+
         if (isStunned) 
         {
             if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
@@ -99,8 +104,10 @@ public class PlayerController : NetworkBehaviour
             if (animator != null) animator.SetFloat("Speed", 0);
             return; 
         }
+        
         if (shieldTimer > 0) shieldTimer -= Time.deltaTime;
         if (dashTimer > 0) dashTimer -= Time.deltaTime;
+        
         if (characterType == CharacterType.DogKnight)
         {
             if (Input.GetButtonDown("Fire2") && shieldTimer <= 0 && !isShieldActive.Value)
@@ -117,7 +124,9 @@ public class PlayerController : NetworkBehaviour
                 dashTimer = dashCooldown;
             }
         }
+        
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
+
         if (Input.GetButtonDown("Fire1") && currentItem != null)
         {
             isCharging = true; currentCharge = 0f;
@@ -126,33 +135,40 @@ public class PlayerController : NetworkBehaviour
         {
             currentCharge += Time.deltaTime; currentCharge = Mathf.Clamp(currentCharge, 0, maxChargeTime);
         }
+        
         if (Input.GetButtonUp("Fire1") && isCharging) 
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
+
             if (currentItem != null)
             {
                 ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
                 if (itemComponent != null && itemComponent.itemData != null)
                 {
-                    RecordItemUsedAnalytics(itemComponent.itemData.name);
+                    RecordItemUsageStats(itemComponent.itemData.name, itemComponent.itemData.damage, chargeMultiplier);
                 }
             }
+
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
         }
+        
         if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
         if (Input.GetButtonDown("Jump") && controller.isGrounded) verticalVelocity = jumpForce;
         verticalVelocity += gravity * Time.deltaTime;
+
         float x = Input.GetAxis("Horizontal"); 
         float z = Input.GetAxis("Vertical");   
         Vector3 moveInput = new Vector3(x, 0f, z).normalized;
         Vector3 moveDirection = Vector3.zero;
+
         if (moveInput.magnitude >= 0.1f && mainCamera != null) 
         {
             Vector3 cameraForward = mainCamera.transform.forward;
             Vector3 cameraRight = mainCamera.transform.right;
             cameraForward.y = 0; cameraRight.y = 0;
             cameraForward.Normalize(); cameraRight.Normalize();
+
             moveDirection = (cameraForward * moveInput.z + cameraRight * moveInput.x).normalized;
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
@@ -161,13 +177,15 @@ public class PlayerController : NetworkBehaviour
         Vector3 finalMovement = moveDirection * moveSpeed;
         finalMovement.y = verticalVelocity; 
         controller.Move(finalMovement * Time.deltaTime);
+
         if (animator != null) animator.SetFloat("Speed", moveInput.magnitude); 
     }
 
     void LateUpdate()
     {
-        if (!IsOwner || !IsSpawned) return; 
+        if (!IsOwner || !IsSpawned) return;
         if (mainCamera == null) return;
+
         Quaternion camRotation = Quaternion.Euler(pitch, yaw, 0);
         Vector3 lookAtPosition = transform.position + targetOffset;
         mainCamera.transform.position = lookAtPosition - (camRotation * Vector3.forward * cameraDistance);
@@ -179,64 +197,56 @@ public class PlayerController : NetworkBehaviour
         impact += force;
         if (force.y > 0) verticalVelocity = force.y; 
     }
-    
+
     [ServerRpc]
     void ActivateShieldServerRpc()
     {
-        isShieldActive.Value = true;
-        UpdateShieldVisualClientRpc(true);
+        isShieldActive.Value = true; UpdateShieldVisualClientRpc(true); 
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void BreakShieldServerRpc()
     {
-        isShieldActive.Value = false;
-        UpdateShieldVisualClientRpc(false);
+        isShieldActive.Value = false; UpdateShieldVisualClientRpc(false);
     }
 
     [ClientRpc]
     void UpdateShieldVisualClientRpc(bool active)
     {
-        if (shieldVisual != null) shieldVisual.SetActive(active);
+        if (shieldVisual != null) shieldVisual.SetActive(active); 
     }
-    
+
     void Dash()
     {
-        Vector3 dashDir = transform.forward;
-        AddImpact(dashDir * dashForce);
+        Vector3 dashDir = transform.forward; AddImpact(dashDir * dashForce); 
     }
-    
+
     [ClientRpc]
-    public void ApplyStunClientRpc(float duration) 
+    public void ApplyStunClientRpc(float duration)
     {
-        if (!IsOwner) return;
-        StartCoroutine(StunRoutine(duration));
+        if (!IsOwner) return; StartCoroutine(StunRoutine(duration)); 
     }
 
     private IEnumerator StunRoutine(float duration) 
     {
         isStunned = true; 
-        isCharging = false; 
-        currentCharge = 0f;
+        isCharging = false; currentCharge = 0f;
         yield return new WaitForSeconds(duration); 
         isStunned = false; 
     }
 
-    void TryPickupItem() 
-    {
+    void TryPickupItem() {
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, pickupRange);
-        foreach (var hitCollider in hitColliders) 
-        {
-            if (hitCollider.TryGetComponent(out ThrowableItem item)) 
-            {
+        foreach (var hitCollider in hitColliders) {
+            if (hitCollider.TryGetComponent(out ThrowableItem item)) {
                 NetworkObject netObj = item.GetComponent<NetworkObject>();
-                if (netObj.IsSpawned && netObj.transform.parent == null)
-                {
+                if (netObj.IsSpawned && netObj.transform.parent == null) {
                     PickupItemServerRpc(netObj.NetworkObjectId); break;
                 }
             }
         }
     }
+
     [ServerRpc] void PickupItemServerRpc(ulong itemNetworkId) 
     {
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemNetworkId, out NetworkObject itemObj)) 
@@ -245,44 +255,51 @@ public class PlayerController : NetworkBehaviour
             SetCurrentItemClientRpc(itemNetworkId);
         }
     }
+    
     [ClientRpc] void SetCurrentItemClientRpc(ulong itemNetworkId) 
     {
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemNetworkId, out NetworkObject itemObj)) currentItem = itemObj;
     }
+    
     [ServerRpc] void ThrowItemServerRpc(Vector3 aimDirection, float chargeMultiplier) 
     {
         if (currentItem != null) 
         {
-            currentItem.GetComponent<ThrowableItem>().Throw(aimDirection, throwForce, chargeMultiplier); 
+            ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
+            if (GameManager.Instance != null && itemComponent.itemData != null)
+            {
+                float totalDamage = itemComponent.itemData.damage * chargeMultiplier;
+                GameManager.Instance.RecordMatchStat(itemComponent.itemData.name, totalDamage);
+            }
+
+            itemComponent.Throw(aimDirection, throwForce, chargeMultiplier); 
             ClearItemClientRpc();
         }
     }
-    [ClientRpc]
-    void ClearItemClientRpc()
-    {
-        currentItem = null; 
-    }
-    [ServerRpc]
-    void FallDeathServerRpc()
-    {
-        if (TryGetComponent(out PlayerHealth health)) health.Die(); 
-    }
 
-    private void RecordItemUsedAnalytics(string itemName)
+    [ClientRpc] void ClearItemClientRpc() { currentItem = null; }
+    [ServerRpc] void FallDeathServerRpc() { if (TryGetComponent(out PlayerHealth health)) health.Die(); }
+
+    private void RecordItemUsageStats(string itemName, float baseDamage, float chargeMultiplier)
     {
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
+
         try
         {
-            CustomEvent itemEvent = new CustomEvent("item_used")
+            float totalDamage = baseDamage * chargeMultiplier;
+            string throwerCharacter = characterType.ToString(); 
+
+            CustomEvent itemEvent = new CustomEvent("item_usage_stats")
             {
-                { "item_name", itemName }
+                { "item_name", itemName },
+                { "base_damage", baseDamage },
+                { "charge_multiplier", chargeMultiplier },
+                { "total_damage_potential", totalDamage },
+                { "thrower_character", throwerCharacter }
             };
             AnalyticsService.Instance.RecordEvent(itemEvent);
             AnalyticsService.Instance.Flush(); 
         }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning("Analytics Error: " + e.Message);
-        }
+        catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
     }
 }
