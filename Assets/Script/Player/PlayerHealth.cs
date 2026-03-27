@@ -5,8 +5,8 @@ public class PlayerHealth : NetworkBehaviour
 {
     public NetworkVariable<float> currentHealth = new NetworkVariable<float>(100f);
     private CharacterController controller;
-
-    void Awake() {
+    void Awake() 
+    {
         controller = GetComponent<CharacterController>();
     }
 
@@ -22,7 +22,6 @@ public class PlayerHealth : NetworkBehaviour
                 return false;
             }
         }
-        
         currentHealth.Value -= amount;
         Debug.Log($"Player {OwnerClientId} HP: {currentHealth.Value}");
         ApplyKnockbackClientRpc(direction * knockback);
@@ -37,8 +36,11 @@ public class PlayerHealth : NetworkBehaviour
     public void Die() 
     {
         if (!IsServer) return; 
-
         Debug.Log($"Player {OwnerClientId} Died!");
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPlayerDied(GetComponent<PlayerController>());
+        }
         PlayerDiedClientRpc();
         GetComponent<NetworkObject>().Despawn(true);
     }
@@ -47,7 +49,6 @@ public class PlayerHealth : NetworkBehaviour
     void PlayerDiedClientRpc()
     {
         if (!IsOwner) return;
-
         Camera mainCam = Camera.main;
         if (mainCam != null)
         {
@@ -57,7 +58,6 @@ public class PlayerHealth : NetworkBehaviour
                 mainCam.gameObject.AddComponent<SpectatorCameraController>();
             }
         }
-
         GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
         if (menuUI != null)
         {

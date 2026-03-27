@@ -148,6 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b748a358143d88a40add113339a12606, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnalyticsManager
+  disableAnalyticsForTesting: 1
 --- !u!4 &80204031
 Transform:
   m_ObjectHideFlags: 0
