@@ -1487,8 +1487,8 @@ MonoBehaviour:
   - {fileID: 6074613081059060313, guid: 07e9e43e35ee5bf468bffd52e49560ec, type: 3}
   spawnInterval: 5
   spawnCenter: {x: 0, y: 0, z: 0}
-  spawnAreaSize: {x: 25, y: 25}
-  spawnHeight: 5
+  spawnAreaSize: {x: 50, y: 50}
+  spawnHeight: 10
 --- !u!4 &1557535779
 Transform:
   m_ObjectHideFlags: 0
