@@ -42,7 +42,19 @@ public class PlayerHealth : NetworkBehaviour
             GameManager.Instance.OnPlayerDied(GetComponent<PlayerController>());
         }
         PlayerDiedClientRpc();
-        GetComponent<NetworkObject>().Despawn(true);
+        
+        // แก้ไขตรงนี้: เปลี่ยนจากการ Despawn ทันที เป็นการใช้ Invoke เพื่อหน่วงเวลาสัก 1.5 วินาที
+        // GetComponent<NetworkObject>().Despawn(true); // <--- ลบหรือคอมเมนต์บรรทัดเดิมนี้ทิ้ง
+        Invoke(nameof(DelayDespawn), 1.5f); 
+    }
+
+    // เพิ่มฟังก์ชันนี้เข้าไปใหม่
+    private void DelayDespawn()
+    {
+        if (IsSpawned)
+        {
+            GetComponent<NetworkObject>().Despawn(true);
+        }
     }
 
     [ClientRpc]
