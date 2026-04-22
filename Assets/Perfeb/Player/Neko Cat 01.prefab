@@ -625,7 +625,7 @@ MonoBehaviour:
     m_InternalValue: 0
   shieldCooldown: 5
   shieldVisual: {fileID: 0}
-  dashForce: 20
+  dashForce: 30
   dashCooldown: 3
   moveSpeed: 5
   rotationSpeed: 700
