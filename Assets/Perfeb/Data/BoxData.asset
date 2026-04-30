@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: BoxData
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   damage: 30
-  knockbackForce: 100
+  knockbackForce: 10
+  isHeavyItem: 0
+  stunDuration: 2

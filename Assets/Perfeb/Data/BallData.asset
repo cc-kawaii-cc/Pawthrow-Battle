@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: BallData
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   damage: 20
-  knockbackForce: 75
+  knockbackForce: 5
   isHeavyItem: 0
   stunDuration: 2
