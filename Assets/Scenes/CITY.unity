@@ -5134,9 +5134,6 @@ PrefabInstance:
       addedObject: {fileID: 291372622}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 288b117258616aa4f928ba6f91dc47c3, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 291372623}
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 288b117258616aa4f928ba6f91dc47c3, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 291372624}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 288b117258616aa4f928ba6f91dc47c3, type: 3}
       insertIndex: -1
@@ -5177,25 +5174,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: c887da5f6e3230f4aa38afe5e8e30387, type: 3}
---- !u!114 &291372623
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 291372621}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a9e990ff909a749b41ec8c25faf632, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
-  ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
-  lethalDamage: 9999
-  lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
-  stunDuration: 3
 --- !u!114 &291372624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5327,6 +5305,37 @@ Transform:
   - {fileID: 77622110}
   - {fileID: 1135343651}
   m_Father: {fileID: 1488182963}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &300156775
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 300156776}
+  m_Layer: 0
+  m_Name: PickUpBlueWay (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &300156776
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300156775}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.15000153, y: 0, z: -53.899998}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1168468877}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &314129628
 PrefabInstance:
@@ -5884,9 +5893,6 @@ PrefabInstance:
       addedObject: {fileID: 347981445}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 9b25e71fd5b7ac6469539d930c6dc2e6, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 347981444}
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 9b25e71fd5b7ac6469539d930c6dc2e6, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 347981447}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 9b25e71fd5b7ac6469539d930c6dc2e6, type: 3}
       insertIndex: -1
@@ -5924,25 +5930,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: ca65f40fba8c4d146800611d34e2e114, type: 3}
---- !u!114 &347981444
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 347981442}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a9e990ff909a749b41ec8c25faf632, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
-  ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
-  lethalDamage: 9999
-  lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
-  stunDuration: 3
 --- !u!114 &347981445
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6209,9 +6196,6 @@ PrefabInstance:
       addedObject: {fileID: 360822484}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 05aec82adc02f16409639716322b1673, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 360822485}
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 05aec82adc02f16409639716322b1673, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 360822486}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 05aec82adc02f16409639716322b1673, type: 3}
       insertIndex: -1
@@ -6252,25 +6236,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: a7419a75ac6929e48842c0470aa44718, type: 3}
---- !u!114 &360822485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 360822483}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a9e990ff909a749b41ec8c25faf632, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
-  ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
-  lethalDamage: 9999
-  lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
-  stunDuration: 3
 --- !u!114 &360822486
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7680,9 +7645,6 @@ PrefabInstance:
       addedObject: {fileID: 420069004}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 81c050d9e127fdd45af1f6b8da476b2b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 420069005}
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 81c050d9e127fdd45af1f6b8da476b2b, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 420069006}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 81c050d9e127fdd45af1f6b8da476b2b, type: 3}
       insertIndex: -1
@@ -7723,25 +7685,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 6780ac7fd67c9ab43aebe63ff3fb60aa, type: 3}
---- !u!114 &420069005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 420069003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a9e990ff909a749b41ec8c25faf632, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
-  ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
-  lethalDamage: 9999
-  lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
-  stunDuration: 3
 --- !u!114 &420069006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9126,6 +9069,7 @@ Transform:
   - {fileID: 554717993}
   - {fileID: 1399411876}
   - {fileID: 449419824}
+  - {fileID: 1698007022}
   - {fileID: 1369137856}
   - {fileID: 1669893254}
   - {fileID: 2109824919}
@@ -12952,9 +12896,6 @@ PrefabInstance:
       addedObject: {fileID: 724852499}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 05aec82adc02f16409639716322b1673, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 724852500}
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 05aec82adc02f16409639716322b1673, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 724852501}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 05aec82adc02f16409639716322b1673, type: 3}
       insertIndex: -1
@@ -12995,25 +12936,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: a7419a75ac6929e48842c0470aa44718, type: 3}
---- !u!114 &724852500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 724852498}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a9e990ff909a749b41ec8c25faf632, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
-  ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
-  lethalDamage: 9999
-  lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
-  stunDuration: 3
 --- !u!114 &724852501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16162,6 +16084,37 @@ Transform:
   - {fileID: 1467154778}
   m_Father: {fileID: 1488182963}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &936187223
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 936187224}
+  m_Layer: 0
+  m_Name: PickUpBlueWay (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &936187224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 936187223}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 53.839996, y: 0, z: -53.899998}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1168468877}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &940086961
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19133,6 +19086,40 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!1 &1168468876
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1168468877}
+  m_Layer: 0
+  m_Name: PickUpBlueWay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1168468877
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168468876}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 16.86, y: -12.44, z: 53.76}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1448632071}
+  - {fileID: 936187224}
+  - {fileID: 300156776}
+  m_Father: {fileID: 1488182963}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1169462484
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22419,9 +22406,6 @@ PrefabInstance:
       addedObject: {fileID: 1300532520}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 93d0d450ec8b42e46b724bf2bbee330b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1300532521}
-    - targetCorrespondingSourceObject: {fileID: 100000, guid: 93d0d450ec8b42e46b724bf2bbee330b, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1300532522}
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 93d0d450ec8b42e46b724bf2bbee330b, type: 3}
       insertIndex: -1
@@ -22462,25 +22446,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 6780ac7fd67c9ab43aebe63ff3fb60aa, type: 3}
---- !u!114 &1300532521
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300532519}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99a9e990ff909a749b41ec8c25faf632, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
-  ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
-  lethalDamage: 9999
-  lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
-  stunDuration: 3
 --- !u!114 &1300532522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23841,7 +23806,6 @@ Transform:
   - {fileID: 1572556691}
   - {fileID: 1589535223}
   - {fileID: 1658072165}
-  - {fileID: 1698007022}
   - {fileID: 1760133381}
   - {fileID: 2144424898}
   - {fileID: 291372620}
@@ -24088,6 +24052,15 @@ MonoBehaviour:
     - {fileID: 1482852099}
     - {fileID: 154497238}
     - {fileID: 1266714174}
+    moveSpeed: 15
+    turnSpeed: 10
+    currentWaypointIndex: 0
+  - carTransform: {fileID: 1698007022}
+    waypoints:
+    - {fileID: 1168468877}
+    - {fileID: 1448632071}
+    - {fileID: 936187224}
+    - {fileID: 300156776}
     moveSpeed: 15
     turnSpeed: 10
     currentWaypointIndex: 0
@@ -25371,6 +25344,37 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: ab761d05302615348a9aed34ccd58dd7, type: 3}
+--- !u!1 &1448632070
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1448632071}
+  m_Layer: 0
+  m_Name: PickUpBlueWay (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1448632071
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448632070}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 53.839996, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1168468877}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1451327245
 GameObject:
   m_ObjectHideFlags: 0
@@ -26135,6 +26139,7 @@ Transform:
   - {fileID: 41325546}
   - {fileID: 406710402}
   - {fileID: 412543290}
+  - {fileID: 1168468877}
   m_Father: {fileID: 475894941}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1489089068
@@ -29916,8 +29921,12 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1369137856}
+    m_TransformParent: {fileID: 475894941}
     m_Modifications:
+    - target: {fileID: 100000, guid: ce2dd4bb67fdc684dac928dc2cfb7a0f, type: 3}
+      propertyPath: m_Name
+      value: PickUpBlue1
+      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: ce2dd4bb67fdc684dac928dc2cfb7a0f, type: 3}
       propertyPath: m_RootOrder
       value: 628
@@ -29928,11 +29937,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: ce2dd4bb67fdc684dac928dc2cfb7a0f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.52
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: ce2dd4bb67fdc684dac928dc2cfb7a0f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15.670396
+      value: 32.6
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: ce2dd4bb67fdc684dac928dc2cfb7a0f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -30015,11 +30024,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazardCarCollision
   ShowTopMostFoldoutHeaderGroup: 1
-  hazardType: 0
+  hazardType: 1
   lethalDamage: 9999
   lethalKnockback: 50
-  stunDamage: 10
-  stunKnockback: 15
+  stunDamage: 20
+  stunKnockback: 20
   stunDuration: 3
 --- !u!114 &1698007026
 MonoBehaviour:
