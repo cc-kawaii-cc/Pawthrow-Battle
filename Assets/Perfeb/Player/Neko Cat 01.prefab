@@ -839,7 +839,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4072139161
+  GlobalObjectIdHash: 4250627313
   InScenePlacedSourceGlobalObjectIdHash: 4072139161
   DeferredDespawnTick: 0
   Ownership: 1
@@ -872,6 +872,29 @@ MonoBehaviour:
   shieldVisual: {fileID: 0}
   dashForce: 30
   dashCooldown: 3
+  maxJumps: 2
+  jumpParticle: {fileID: 0}
+  echoRadius: 20
+  echoDuration: 3
+  echoCooldown: 8
+  decoyPrefab: {fileID: 0}
+  decoyDuration: 4
+  decoyCooldown: 10
+  rageThrowMultiplier: 2
+  rageDuration: 5
+  rageCooldown: 12
+  isRaging: 0
+  rageVFX: {fileID: 0}
+  bullChargeSpeed: 22
+  bullChargeDistance: 12
+  bullChargeDamage: 30
+  bullChargeKnockback: 25
+  bullChargeCooldown: 8
+  bullChargeVFX: {fileID: 0}
+  inkRadius: 8
+  inkBlindDuration: 3
+  inkCooldown: 10
+  inkVFXPrefab: {fileID: 0}
   moveSpeed: 5
   rotationSpeed: 700
   jumpForce: 5

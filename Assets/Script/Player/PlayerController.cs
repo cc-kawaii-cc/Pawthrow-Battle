@@ -1,11 +1,11 @@
 using Unity.Netcode;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Services.Analytics;
 using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
-
 public class PlayerController : NetworkBehaviour 
 {
     public enum CharacterType { DogKnight, NekoCat, Chicken, Bat, Fox, Bear, Bull, Octopus }
@@ -27,6 +27,7 @@ public class PlayerController : NetworkBehaviour
     [Header("=== CHICKEN SKILL: Double Jump ===")]
     public int maxJumps = 2;
     private int jumpsRemaining = 0;
+    public ParticleSystem jumpParticle; 
 
     [Header("=== BAT SKILL: Echo ===")]
     public float echoRadius = 20f;
@@ -46,6 +47,7 @@ public class PlayerController : NetworkBehaviour
     public float rageCooldown = 12f;
     private float rageTimer = 0f;
     public bool isRaging = false;
+    public GameObject rageVFX; 
 
     [Header("=== BULL SKILL: Charge ===")]
     public float bullChargeSpeed = 22f;
@@ -55,12 +57,16 @@ public class PlayerController : NetworkBehaviour
     public float bullChargeCooldown = 8f;
     private float bullChargeTimer = 0f;
     private bool isBullCharging = false;
+    private float bullChargeDistanceLeft = 0f;
+    private HashSet<ulong> hitDuringCharge = new HashSet<ulong>();
+    public ParticleSystem bullChargeVFX; 
 
     [Header("=== OCTOPUS SKILL: Ink ===")]
     public float inkRadius = 8f;
     public float inkBlindDuration = 3f;
     public float inkCooldown = 10f;
     private float inkTimer = 0f;
+    public GameObject inkVFXPrefab; 
 
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
@@ -172,10 +178,7 @@ public class PlayerController : NetworkBehaviour
                     }
                 }
 
-                if (!isStuck)
-                {
-                    return skyPos; 
-                }
+                if (!isStuck) return skyPos; 
             }
         }
 
@@ -186,6 +189,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (controller != null && !controller.enabled) return; 
+
         if (SceneManager.GetActiveScene().name == "CITY")
         {
             if (Input.GetMouseButtonDown(0)) 
@@ -227,6 +231,7 @@ public class PlayerController : NetworkBehaviour
             return; 
         }
         
+        // Cooldown Timers
         if (shieldTimer > 0) shieldTimer -= Time.deltaTime;
         if (dashTimer > 0) dashTimer -= Time.deltaTime;
         if (echoTimer > 0) echoTimer -= Time.deltaTime;
@@ -235,6 +240,7 @@ public class PlayerController : NetworkBehaviour
         if (bullChargeTimer > 0) bullChargeTimer -= Time.deltaTime;
         if (inkTimer > 0) inkTimer -= Time.deltaTime;
         
+        // Skills Dispatch
         if (characterType == CharacterType.DogKnight)
         {
             if (Input.GetButtonDown("Fire2") && shieldTimer <= 0 && !isShieldActive.Value)
@@ -251,6 +257,7 @@ public class PlayerController : NetworkBehaviour
                 dashTimer = dashCooldown;
             }
         }
+
         switch (characterType)
         {
             case CharacterType.Chicken: HandleChickenSkill(); break;
@@ -261,6 +268,7 @@ public class PlayerController : NetworkBehaviour
             case CharacterType.Octopus: HandleOctopusSkill(); break;
         }
         
+        // Pick & Throw Logic
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
 
         if (Input.GetButtonDown("Fire1") && currentItem != null)
@@ -269,59 +277,77 @@ public class PlayerController : NetworkBehaviour
         }
         if (Input.GetButton("Fire1") && isCharging) 
         {
-            currentCharge += Time.deltaTime; currentCharge = Mathf.Clamp(currentCharge, 0, maxChargeTime);
+            currentCharge += Time.deltaTime; 
+            currentCharge = Mathf.Clamp(currentCharge, 0, maxChargeTime);
         }
-        
         if (Input.GetButtonUp("Fire1") && isCharging) 
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
 
-            if (currentItem != null)
-            {
-                ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
-                if (itemComponent != null && itemComponent.itemData != null)
-                {
-                    RecordItemUsageStats(itemComponent.itemData.name, itemComponent.itemData.damage, chargeMultiplier);
-                }
-            }
-
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
         }
         
-        if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
-        if (Input.GetButtonDown("Jump") && controller.isGrounded) verticalVelocity = jumpForce;
+        // Jump & Gravity Logic
+        if (controller.isGrounded && verticalVelocity < 0) 
+        {
+            verticalVelocity = -2f;
+        }
+        
+        if (characterType != CharacterType.Chicken)
+        {
+            if (Input.GetButtonDown("Jump") && controller.isGrounded && !isStunned) 
+            {
+                verticalVelocity = jumpForce;
+            }
+        }
         verticalVelocity += gravity * Time.deltaTime;
 
+        // BULL CHARGE MOVEMENT
+        if (isBullCharging && characterType == CharacterType.Bull)
+        {
+            float step = bullChargeSpeed * Time.deltaTime;
+            controller.Move(transform.forward * step);
+            bullChargeDistanceLeft -= step;
+            
+            RequestBullHitCheckServerRpc(transform.position);
+            
+            if (bullChargeDistanceLeft <= 0f || (controller.collisionFlags & CollisionFlags.Sides) != 0)
+            {
+                isBullCharging = false;
+            }
+        }
+
+        // NORMAL MOVEMENT
         float x = Input.GetAxis("Horizontal"); 
         float z = Input.GetAxis("Vertical");   
         Vector3 moveInput = new Vector3(x, 0f, z).normalized;
         Vector3 moveDirection = Vector3.zero;
 
-        if (moveInput.magnitude >= 0.1f && mainCamera != null) 
+        if (!isBullCharging && !isStunned)
         {
-            Vector3 cameraForward = mainCamera.transform.forward;
-            Vector3 cameraRight = mainCamera.transform.right;
-            cameraForward.y = 0; cameraRight.y = 0;
-            cameraForward.Normalize(); cameraRight.Normalize();
+            if (moveInput.magnitude >= 0.1f && mainCamera != null) 
+            {
+                Vector3 cameraForward = mainCamera.transform.forward;
+                Vector3 cameraRight = mainCamera.transform.right;
+                cameraForward.y = 0; cameraRight.y = 0;
+                cameraForward.Normalize(); cameraRight.Normalize();
 
-            moveDirection = (cameraForward * moveInput.z + cameraRight * moveInput.x).normalized;
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                moveDirection = (cameraForward * moveInput.z + cameraRight * moveInput.x).normalized;
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            }
         }
 
         Vector3 finalMovement = moveDirection * moveSpeed;
         finalMovement.y = verticalVelocity; 
         controller.Move(finalMovement * Time.deltaTime);
 
-        if (animator != null) animator.SetFloat("Speed", moveInput.magnitude); 
+        if (animator != null && !isStunned && !isBullCharging) 
+        {
+            animator.SetFloat("Speed", moveInput.magnitude); 
+        }
     }
-    void HandleChickenSkill() { }
-    void HandleBatSkill() { }
-    void HandleFoxSkill() { }
-    void HandleBearSkill() { }
-    void HandleBullSkill() { }
-    void HandleOctopusSkill() { }
 
     void LateUpdate()
     {
@@ -339,6 +365,226 @@ public class PlayerController : NetworkBehaviour
         impact += force;
         if (force.y > 0) verticalVelocity = force.y; 
     }
+
+    [ClientRpc] 
+    public void AddImpactClientRpc(Vector3 force) 
+    { 
+        if (IsOwner) AddImpact(force); 
+    }
+
+    // ==========================================
+    // 🐣 CHICKEN SKILL
+    // ==========================================
+    void HandleChickenSkill() 
+    { 
+        if (controller.isGrounded) jumpsRemaining = maxJumps;
+
+        if (Input.GetButtonDown("Jump") && jumpsRemaining > 0 && !isStunned)
+        {
+            verticalVelocity = jumpForce;
+            jumpsRemaining--;
+            TriggerJumpVFXServerRpc(); 
+        
+            if (animator != null) animator.SetTrigger("DoubleJump"); 
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void TriggerJumpVFXServerRpc() { TriggerJumpVFXClientRpc(); }
+
+    [ClientRpc]
+    void TriggerJumpVFXClientRpc()
+    {
+        if (jumpParticle != null) jumpParticle.Play();
+        else Debug.Log("JUMP VFX");
+    }
+
+    // ==========================================
+    // 🦇 BAT SKILL
+    // ==========================================
+    void HandleBatSkill()
+    {
+        if (Input.GetKeyDown(KeyCode.E) && echoTimer <= 0 && !isStunned)
+        {
+            echoTimer = echoCooldown;
+            UseEchoServerRpc();
+        }
+    }
+
+    [ServerRpc]
+    void UseEchoServerRpc()
+    {
+        var allPlayers = FindObjectsOfType<PlayerController>();
+        List<Vector3> positions = new List<Vector3>();
+        List<ulong> ids = new List<ulong>();
+
+        foreach (var p in allPlayers)
+        {
+            if (p.OwnerClientId == OwnerClientId) continue;
+            if (Vector3.Distance(transform.position, p.transform.position) <= echoRadius)
+            {
+                positions.Add(p.transform.position);
+                ids.Add(p.OwnerClientId);
+            }
+        }
+
+        ClientRpcParams clientRpcParams = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { OwnerClientId } } };
+        ShowEchoResultClientRpc(positions.ToArray(), ids.ToArray(), echoDuration, clientRpcParams);
+    }
+
+    [ClientRpc]
+    void ShowEchoResultClientRpc(Vector3[] positions, ulong[] ids, float duration, ClientRpcParams clientRpcParams = default)
+    {
+        if (!IsOwner) return;
+        if (EchoMarkerUI.Instance != null) EchoMarkerUI.Instance.ShowMarkers(positions, ids, duration);
+    }
+
+    // ==========================================
+    // 🦊 FOX SKILL
+    // ==========================================
+    void HandleFoxSkill()
+    {
+        if (decoyTimer > 0) return;
+        if (Input.GetKeyDown(KeyCode.E) && decoyPrefab != null && !isStunned)
+        {
+            decoyTimer = decoyCooldown;
+            SpawnDecoyServerRpc(transform.position, transform.rotation);
+        }
+    }
+
+    [ServerRpc]
+    void SpawnDecoyServerRpc(Vector3 pos, Quaternion rot)
+    {
+        GameObject go = Instantiate(decoyPrefab, pos, rot);
+        NetworkObject netObj = go.GetComponent<NetworkObject>();
+        netObj.Spawn();
+    
+        DecoyController decoy = go.GetComponent<DecoyController>();
+        if (decoy != null) decoy.lifetime.Value = decoyDuration;
+    }
+
+    // ==========================================
+    // 🐻 BEAR SKILL
+    // ==========================================
+    void HandleBearSkill() 
+    { 
+        if (rageTimer > 0) return;
+        if (Input.GetKeyDown(KeyCode.E) && !isStunned)
+        {
+            rageTimer = rageCooldown;
+            ActivateRageServerRpc();
+        }
+    }
+
+    [ServerRpc] 
+    void ActivateRageServerRpc()
+    {
+        SetRageClientRpc(true);
+        StartCoroutine(RageEndRoutine());
+    }
+
+    private IEnumerator RageEndRoutine()
+    {
+        yield return new WaitForSeconds(rageDuration);
+        SetRageClientRpc(false);
+    }
+
+    [ClientRpc] 
+    void SetRageClientRpc(bool active)
+    {
+        isRaging = active;
+        if (rageVFX != null) rageVFX.SetActive(active);
+    }
+
+    // ==========================================
+    // 🐂 BULL SKILL
+    // ==========================================
+    void HandleBullSkill() 
+    { 
+        if (bullChargeTimer > 0) return;
+        if (Input.GetKeyDown(KeyCode.E) && !isBullCharging && !isStunned)
+        {
+            bullChargeTimer = bullChargeCooldown;
+            isBullCharging = true;
+            bullChargeDistanceLeft = bullChargeDistance;
+            hitDuringCharge.Clear(); 
+            StartChargeVFXServerRpc();
+        }
+    }
+
+    [ServerRpc]
+    void RequestBullHitCheckServerRpc(Vector3 pos)
+    {
+        Collider[] hits = Physics.OverlapSphere(pos, 1.3f);
+        foreach (var col in hits)
+        {
+            if (!col.TryGetComponent(out PlayerHealth health)) continue;
+            if (health.OwnerClientId == OwnerClientId) continue; 
+            if (hitDuringCharge.Contains(health.OwnerClientId)) continue; 
+
+            hitDuringCharge.Add(health.OwnerClientId);
+            Vector3 dir = (col.transform.position - transform.position).normalized;
+            dir.y = 0.4f; 
+            dir = dir.normalized;
+            health.TakeDamage(bullChargeDamage, bullChargeKnockback, dir);
+        }
+    }
+
+    [ServerRpc] void StartChargeVFXServerRpc() { StartChargeVFXClientRpc(); }
+    [ClientRpc] void StartChargeVFXClientRpc() { if (bullChargeVFX != null) bullChargeVFX.Play(); }
+
+    // ==========================================
+    // 🐙 OCTOPUS SKILL
+    // ==========================================
+    void HandleOctopusSkill()
+    {
+        if (inkTimer > 0) return;
+        if (Input.GetKeyDown(KeyCode.E) && !isStunned)
+        {
+            inkTimer = inkCooldown;
+            UseInkServerRpc(transform.position);
+        }
+    }
+
+    [ServerRpc]
+    void UseInkServerRpc(Vector3 center)
+    {
+        var allPlayers = FindObjectsOfType<PlayerController>();
+        List<ulong> targets = new List<ulong>();
+        
+        foreach (var p in allPlayers)
+        {
+            if (p.OwnerClientId == OwnerClientId) continue; 
+            if (Vector3.Distance(center, p.transform.position) <= inkRadius) targets.Add(p.OwnerClientId);
+        }
+        
+        if (targets.Count > 0)
+        {
+            ClientRpcParams rpcParams = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = targets.ToArray() } };
+            ApplyInkClientRpc(inkBlindDuration, rpcParams);
+        }
+        SpawnInkVFXClientRpc(center);
+    }
+
+    [ClientRpc]
+    void ApplyInkClientRpc(float duration, ClientRpcParams _ = default)
+    {
+        if (InkBlindEffect.Instance != null) InkBlindEffect.Instance.ApplyBlind(duration);
+    }
+
+    [ClientRpc]
+    void SpawnInkVFXClientRpc(Vector3 pos)
+    {
+        if (inkVFXPrefab != null) 
+        {
+            GameObject vfx = Instantiate(inkVFXPrefab, pos, Quaternion.identity);
+            Destroy(vfx, 5f); 
+        }
+    } 
+
+    // ==========================================
+    // OTHER SKILLS & MECHANICS
+    // ==========================================
 
     [ServerRpc]
     void ActivateShieldServerRpc()
@@ -403,18 +649,20 @@ public class PlayerController : NetworkBehaviour
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemNetworkId, out NetworkObject itemObj)) currentItem = itemObj;
     }
     
-    [ServerRpc] void ThrowItemServerRpc(Vector3 aimDirection, float chargeMultiplier) 
+    [ServerRpc] 
+    void ThrowItemServerRpc(Vector3 aimDirection, float chargeMultiplier) 
     {
         if (currentItem != null) 
         {
             ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
-            if (GameManager.Instance != null && itemComponent.itemData != null)
+            if (GameManager.Instance != null && itemComponent != null && itemComponent.itemData != null)
             {
-                float totalDamage = itemComponent.itemData.damage * chargeMultiplier;
-                GameManager.Instance.RecordMatchStat(itemComponent.itemData.name, totalDamage);
+                float totalDmg = itemComponent.itemData.damage * chargeMultiplier * (isRaging ? rageThrowMultiplier : 1f);
+                GameManager.Instance.RecordMatchStat(itemComponent.itemData.name, totalDmg);
             }
 
-            itemComponent.Throw(aimDirection, throwForce, chargeMultiplier); 
+            float finalForce = isRaging ? throwForce * rageThrowMultiplier : throwForce;
+            itemComponent.Throw(aimDirection, finalForce, chargeMultiplier); 
             ClearItemClientRpc();
         }
     }
@@ -444,5 +692,4 @@ public class PlayerController : NetworkBehaviour
         }
         catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
     }
-    
 }
