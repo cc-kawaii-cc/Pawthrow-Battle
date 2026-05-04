@@ -2,6 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using System.Collections;
 using Unity.Services.Analytics;
+using UnityEngine.SceneManagement; // เพิ่มเพื่อใช้เช็คชื่อ Scene
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : NetworkBehaviour 
@@ -64,14 +65,24 @@ public class PlayerController : NetworkBehaviour
         if (IsOwner)
         {
             mainCamera = Camera.main; 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            
+            // เช็คว่าถ้าเป็นฉาก CITY ค่อยล็อคเมาส์ ถ้าเป็นฉากอื่น (ห้องรอ) ปล่อยเมาส์ไว้ให้กดปุ่มได้
+            if (SceneManager.GetActiveScene().name == "CITY")
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
 
             StartCoroutine(SpawnRandomlyAndDropCoroutine());
         }
     }
 
-    private System.Collections.IEnumerator SpawnRandomlyAndDropCoroutine()
+    private IEnumerator SpawnRandomlyAndDropCoroutine()
     {
         if (controller != null) controller.enabled = false;
 
@@ -137,6 +148,19 @@ public class PlayerController : NetworkBehaviour
     void Update() 
     {
         if (!IsOwner) return;
+
+        // ป้องกัน Error ตอนที่ CharacterController ถูกปิดอยู่
+        if (controller != null && !controller.enabled) return; 
+
+        // สั่งล็อคเมาส์เมื่อคลิกซ้าย "เฉพาะตอนอยู่ด่าน CITY เท่านั้น"
+        if (SceneManager.GetActiveScene().name == "CITY")
+        {
+            if (Input.GetMouseButtonDown(0)) 
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+        }
 
         if (mainCamera == null) 
         {

@@ -937,11 +937,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
-  cloudProjectId: 0ee9e694-8567-44c4-8d94-41aeb8a07e77
+  cloudProjectId: 5bc112cf-2abe-433e-b811-59f3c03ce14b
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Pawthrow_Battle
-  organizationId: krichzz
+  projectName: Netcode_FinalProject
+  organizationId: unity_bf4d1181f83a0d3c8a8d
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
