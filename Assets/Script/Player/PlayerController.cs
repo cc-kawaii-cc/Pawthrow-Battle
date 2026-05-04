@@ -89,11 +89,11 @@ public class PlayerController : NetworkBehaviour
 
     [Header("Charge & Stun Settings")]
     public float maxChargeTime = 1.5f; 
-    private float currentCharge = 0f;
-    private bool isCharging = false;
+    [HideInInspector] public float currentCharge = 0f;
+    [HideInInspector] public bool isCharging = false;
     private bool isStunned = false;    
     
-    private NetworkObject currentItem;
+    [HideInInspector] public NetworkObject currentItem;
     private Camera mainCamera;
     private float yaw = 0f;
     private float pitch = 20f;
