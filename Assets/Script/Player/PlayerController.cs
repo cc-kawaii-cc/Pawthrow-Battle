@@ -2,15 +2,16 @@ using Unity.Netcode;
 using UnityEngine;
 using System.Collections;
 using Unity.Services.Analytics;
-using UnityEngine.SceneManagement; // เพิ่มเพื่อใช้เช็คชื่อ Scene
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
+
 public class PlayerController : NetworkBehaviour 
 {
-    public enum CharacterType { DogKnight, NekoCat }
+    public enum CharacterType { DogKnight, NekoCat, Chicken, Bat, Fox, Bear, Bull, Octopus }
 
     [Header("Character Skills")]
-    public CharacterType characterType = CharacterType.DogKnight;
+    public CharacterType characterType;
     
     [Header("Dog Skill (Shield)")]
     public NetworkVariable<bool> isShieldActive = new NetworkVariable<bool>(false);
@@ -22,6 +23,44 @@ public class PlayerController : NetworkBehaviour
     public float dashForce = 20f;
     public float dashCooldown = 3f;
     private float dashTimer = 0f;
+    
+    [Header("=== CHICKEN SKILL: Double Jump ===")]
+    public int maxJumps = 2;
+    private int jumpsRemaining = 0;
+
+    [Header("=== BAT SKILL: Echo ===")]
+    public float echoRadius = 20f;
+    public float echoDuration = 3f;
+    public float echoCooldown = 8f;
+    private float echoTimer = 0f;
+
+    [Header("=== FOX SKILL: Decoy ===")]
+    public GameObject decoyPrefab;
+    public float decoyDuration = 4f;
+    public float decoyCooldown = 10f;
+    private float decoyTimer = 0f;
+
+    [Header("=== BEAR SKILL: Rage ===")]
+    public float rageThrowMultiplier = 2f;
+    public float rageDuration = 5f;
+    public float rageCooldown = 12f;
+    private float rageTimer = 0f;
+    public bool isRaging = false;
+
+    [Header("=== BULL SKILL: Charge ===")]
+    public float bullChargeSpeed = 22f;
+    public float bullChargeDistance = 12f;
+    public float bullChargeDamage = 30f;
+    public float bullChargeKnockback = 25f;
+    public float bullChargeCooldown = 8f;
+    private float bullChargeTimer = 0f;
+    private bool isBullCharging = false;
+
+    [Header("=== OCTOPUS SKILL: Ink ===")]
+    public float inkRadius = 8f;
+    public float inkBlindDuration = 3f;
+    public float inkCooldown = 10f;
+    private float inkTimer = 0f;
 
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
@@ -65,8 +104,6 @@ public class PlayerController : NetworkBehaviour
         if (IsOwner)
         {
             mainCamera = Camera.main; 
-            
-            // เช็คว่าถ้าเป็นฉาก CITY ค่อยล็อคเมาส์ ถ้าเป็นฉากอื่น (ห้องรอ) ปล่อยเมาส์ไว้ให้กดปุ่มได้
             if (SceneManager.GetActiveScene().name == "CITY")
             {
                 Cursor.lockState = CursorLockMode.Locked;
@@ -148,11 +185,7 @@ public class PlayerController : NetworkBehaviour
     void Update() 
     {
         if (!IsOwner) return;
-
-        // ป้องกัน Error ตอนที่ CharacterController ถูกปิดอยู่
         if (controller != null && !controller.enabled) return; 
-
-        // สั่งล็อคเมาส์เมื่อคลิกซ้าย "เฉพาะตอนอยู่ด่าน CITY เท่านั้น"
         if (SceneManager.GetActiveScene().name == "CITY")
         {
             if (Input.GetMouseButtonDown(0)) 
@@ -196,6 +229,11 @@ public class PlayerController : NetworkBehaviour
         
         if (shieldTimer > 0) shieldTimer -= Time.deltaTime;
         if (dashTimer > 0) dashTimer -= Time.deltaTime;
+        if (echoTimer > 0) echoTimer -= Time.deltaTime;
+        if (decoyTimer > 0) decoyTimer -= Time.deltaTime;
+        if (rageTimer > 0) rageTimer -= Time.deltaTime;
+        if (bullChargeTimer > 0) bullChargeTimer -= Time.deltaTime;
+        if (inkTimer > 0) inkTimer -= Time.deltaTime;
         
         if (characterType == CharacterType.DogKnight)
         {
@@ -212,6 +250,15 @@ public class PlayerController : NetworkBehaviour
                 Dash();
                 dashTimer = dashCooldown;
             }
+        }
+        switch (characterType)
+        {
+            case CharacterType.Chicken: HandleChickenSkill(); break;
+            case CharacterType.Bat: HandleBatSkill(); break;
+            case CharacterType.Fox: HandleFoxSkill(); break;
+            case CharacterType.Bear: HandleBearSkill(); break;
+            case CharacterType.Bull: HandleBullSkill(); break;
+            case CharacterType.Octopus: HandleOctopusSkill(); break;
         }
         
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
@@ -269,6 +316,12 @@ public class PlayerController : NetworkBehaviour
 
         if (animator != null) animator.SetFloat("Speed", moveInput.magnitude); 
     }
+    void HandleChickenSkill() { }
+    void HandleBatSkill() { }
+    void HandleFoxSkill() { }
+    void HandleBearSkill() { }
+    void HandleBullSkill() { }
+    void HandleOctopusSkill() { }
 
     void LateUpdate()
     {
@@ -391,4 +444,5 @@ public class PlayerController : NetworkBehaviour
         }
         catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
     }
+    
 }
