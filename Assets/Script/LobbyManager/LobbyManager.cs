@@ -195,15 +195,49 @@ public class LobbyManager : MonoBehaviour
     }
 
     private float heartbeatTimer;
+    private float lobbyPollTimer; // [เพิ่มใหม่] ตัวจับเวลาสำหรับรีเฟรชรายชื่อคน
+
     private void Update()
     {
+        HandleHeartbeat();
+        HandleLobbyPollForUpdates();
+    }
+
+    private async void HandleHeartbeat()
+    {
+        // เลี้ยงห้องไม่ให้หายไป (เฉพาะ Host)
         if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
         {
             heartbeatTimer += Time.deltaTime;
             if (heartbeatTimer > 15f)
             {
                 heartbeatTimer = 0f;
-                LobbyService.Instance.SendHeartbeatPingAsync(currentLobby.Id);
+                try {
+                    await LobbyService.Instance.SendHeartbeatPingAsync(currentLobby.Id);
+                } catch { }
+            }
+        }
+    }
+
+    private async void HandleLobbyPollForUpdates()
+    {
+        // [เพิ่มใหม่] ฟังก์ชันทำให้ห้องเป็น Real-time! 
+        // สั่งให้ทุกคน (ทั้งหัวห้องและลูกเรือ) ดึงข้อมูลอัปเดตทุกๆ 1.5 วินาที
+        if (currentLobby != null)
+        {
+            lobbyPollTimer += Time.deltaTime;
+            if (lobbyPollTimer > 1.5f)
+            {
+                lobbyPollTimer = 0f;
+                try
+                {
+                    // โหลดข้อมูลล่าสุดจากเซิร์ฟเวอร์มาทับของเดิม
+                    currentLobby = await LobbyService.Instance.GetLobbyAsync(currentLobby.Id);
+                }
+                catch (LobbyServiceException e)
+                {
+                    Debug.LogWarning("Lobby Poll Error (อาจจะห้องโดนยุบไปแล้ว): " + e.Message);
+                }
             }
         }
     }
