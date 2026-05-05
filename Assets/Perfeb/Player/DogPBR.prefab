@@ -1713,9 +1713,12 @@ MonoBehaviour:
   gravity: -9.81
   animator: {fileID: 0}
   cameraDistance: 5
+  minCameraDistance: 1.5
+  maxCameraDistance: 12
+  zoomSpeed: 5
   mouseSensitivity: 3
-  minPitch: -20
-  maxPitch: 60
+  minPitch: -89
+  maxPitch: 89
   targetOffset: {x: 0, y: 1.5, z: 0}
   handPoint: {fileID: 1418516356672838363}
   pickupRange: 2
@@ -1787,6 +1790,7 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth:
     m_InternalValue: 100
+  isDead: 0
 --- !u!1 &8422892626600285394
 GameObject:
   m_ObjectHideFlags: 0

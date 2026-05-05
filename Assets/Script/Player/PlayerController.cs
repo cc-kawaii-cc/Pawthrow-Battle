@@ -77,9 +77,18 @@ public class PlayerController : NetworkBehaviour
     
     [Header("Camera Settings")]
     public float cameraDistance = 5f;
+    
+    // --- เพิ่มตั้งค่าการซูม ---
+    public float minCameraDistance = 1.5f; // ระยะซูมเข้าใกล้สุด (ติดตัว)
+    public float maxCameraDistance = 12f;  // ระยะซูมออกไกลสุด (เห็นวิวกว้าง)
+    public float zoomSpeed = 5f;           // ความเร็วตอนไถลูกกลิ้งเมาส์
+    
     public float mouseSensitivity = 3f;
-    public float minPitch = -20f;
-    public float maxPitch = 60f;
+    
+    // --- ปรับให้ก้มเงยได้อิสระสุดๆ (อย่าตั้ง 90 เป๊ะ เดี๋ยวกล้องพับ) ---
+    public float minPitch = -89f; // เงยหน้ามองฟ้าได้สุด
+    public float maxPitch = 89f;  // ก้มมองพื้นได้สุด
+    
     public Vector3 targetOffset = new Vector3(0, 1.5f, 0);
     
     [Header("Pick & Throw Settings")]
@@ -257,9 +266,21 @@ public class PlayerController : NetworkBehaviour
             if (mainCamera == null) return; 
         }
         
+        // โค้ดเดิมที่คุณมีอยู่แล้ว
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+        // --- เพิ่มโค้ดระบบซูมเข้า-ออก ด้วย Scroll Mouse ตรงนี้ ---
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (Mathf.Abs(scroll) > 0.01f) // ถ้ามีการไถลูกกลิ้งเมาส์
+        {
+            // ลบด้วยค่า scroll เพราะปกติไถขึ้น (ค่าบวก) เราอยากให้กล้องซูมเข้า (ระยะลดลง)
+            cameraDistance -= scroll * zoomSpeed; 
+            
+            // ล็อกระยะกล้องไม่ให้มุดเข้าตัว หรือถอยไกลเกินไป
+            cameraDistance = Mathf.Clamp(cameraDistance, minCameraDistance, maxCameraDistance);
+        }
 
         if (transform.position.y < fallDeathY && !isDead) 
         {
