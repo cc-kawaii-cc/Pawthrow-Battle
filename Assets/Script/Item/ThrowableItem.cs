@@ -50,14 +50,21 @@ public class ThrowableItem : NetworkBehaviour
     private void OnCollisionEnter(Collision collision) 
     {
         if (!IsServer || !isFlying) return;
-        
-        // เช็คว่าชนผู้เล่นหรือไม่
+
+        // --- EXPLOSIVE: ระบบระเบิดตูมเดียว ---
+        if (itemData.isExplosive)
+        {
+            isFlying = false;
+            Explode(transform.position);
+            return;
+        }
+
+        // --- NORMAL: ลอจิกการชนแบบ Single-target แบบเดิม ---
         bool hitPlayer = collision.gameObject.TryGetComponent(out PlayerHealth targetHealth);
 
         if (hitPlayer) 
         {
-            // ถ้าชนคนปาเอง ให้ข้ามไป (ป้องกันชนตัวเองตอนเพิ่งปล่อยมือ)
-            if (targetHealth.OwnerClientId == throwerId) return;
+            if (targetHealth.OwnerClientId == throwerId) return; // ไม่โดนตัวเอง
             
             Vector3 pushDirection = (targetHealth.transform.position - transform.position).normalized;
             pushDirection.y = 0.5f; 
@@ -76,6 +83,16 @@ public class ThrowableItem : NetworkBehaviour
         
         isFlying = false; 
 
+        // ==========================================
+        // 🔥 FIRE SYSTEM: เสกกองไฟเมื่อชนผู้เล่นหรือพื้น
+        // ==========================================
+        if (itemData.isFireItem && itemData.fireZonePrefab != null)
+        {
+            Vector3 firePos = collision.contacts[0].point;
+            firePos.y += 0.1f; // lift เล็กน้อยไม่ให้จมดิน
+            SpawnFireZone(firePos);
+        }
+
         // --- Destroy on hit player ---
         if (itemData.destroyOnHitPlayer && hitPlayer)
         {
@@ -83,17 +100,62 @@ public class ThrowableItem : NetworkBehaviour
             return;
         }
 
-        // --- Destroy on hit ground (or wall/props) ---  
+        // --- Destroy on hit ground ---  
         if (itemData.destroyOnHitGround && !hitPlayer)
         {
             Invoke(nameof(DespawnSelf), itemData.destroyDelay);
         }
     }
 
-    // ฟังก์ชันสำหรับทำลายไอเทมตัวเอง
+    private void SpawnFireZone(Vector3 pos)
+    {
+        // สร้างกองไฟและ Spawn ผ่าน Network ทันที (ฟังก์ชันนี้ถูกรันโดย Server อยู่แล้ว)
+        GameObject go = Instantiate(itemData.fireZonePrefab, pos, Quaternion.identity);
+        go.GetComponent<NetworkObject>().Spawn();
+    }
+
+    // ==========================================
+    // 💥 EXPLOSION SYSTEM
+    // ==========================================
+    private void Explode(Vector3 center)
+    {
+        SpawnExplosionVFXClientRpc(center);
+        
+        Collider[] hits = Physics.OverlapSphere(center, itemData.explosionRadius);
+        foreach (var col in hits)
+        {
+            if (!col.TryGetComponent(out PlayerHealth health)) continue;
+            if (health.OwnerClientId == throwerId) continue; 
+            
+            Vector3 dir = (col.transform.position - center).normalized;
+            dir.y = 0.5f; 
+            dir = dir.normalized;
+            
+            bool hit = health.TakeDamage(itemData.explosionDamage * currentDamageMultiplier, itemData.explosionKnockback * currentDamageMultiplier, dir);
+            
+            if (hit && itemData.explosionStunDuration > 0f)
+            {
+                if (col.TryGetComponent(out PlayerController ctrl))
+                {
+                    ctrl.ApplyStunClientRpc(itemData.explosionStunDuration);
+                }
+            }
+        }
+        Invoke(nameof(DespawnSelf), 0.15f);
+    }
+
+    [ClientRpc]
+    private void SpawnExplosionVFXClientRpc(Vector3 pos)
+    {
+        if (itemData.explosionVFXPrefab != null)
+        {
+            GameObject vfx = Instantiate(itemData.explosionVFXPrefab, pos, Quaternion.identity);
+            Destroy(vfx, 3f); 
+        }
+    }
+
     private void DespawnSelf()
     {
-        // ต้องเช็คว่าเป็น Server และ Object ยังอยู่บน Network หรือไม่
         if (IsServer && IsSpawned) 
         {
             GetComponent<NetworkObject>().Despawn(true);

@@ -93,6 +93,10 @@ public class PlayerController : NetworkBehaviour
     [HideInInspector] public bool isCharging = false;
     private bool isStunned = false;    
     
+    [Header("Consumable State")]
+    private bool hasSpeedBoost = false;
+    private bool hasThrowBoost = false;
+
     [HideInInspector] public NetworkObject currentItem;
     private Camera mainCamera;
     private float yaw = 0f;
@@ -271,6 +275,12 @@ public class PlayerController : NetworkBehaviour
         // Pick & Throw Logic
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
 
+        // 🍔 Consume Item Logic
+        if (Input.GetKeyDown(KeyCode.F) && currentItem != null)
+        {
+            ConsumeItemServerRpc();
+        }
+
         if (Input.GetButtonDown("Fire1") && currentItem != null)
         {
             isCharging = true; currentCharge = 0f;
@@ -370,6 +380,65 @@ public class PlayerController : NetworkBehaviour
     public void AddImpactClientRpc(Vector3 force) 
     { 
         if (IsOwner) AddImpact(force); 
+    }
+
+    // ==========================================
+    // 🍔 CONSUMABLE SKILLS
+    // ==========================================
+    [ServerRpc]
+    void ConsumeItemServerRpc()
+    {
+        if (currentItem == null) return;
+        
+        ThrowableItem item = currentItem.GetComponent<ThrowableItem>();
+        if (item == null || item.itemData == null || !item.itemData.isConsumable) return;
+        
+        ItemData d = item.itemData;
+        
+        // Heal: ต้องผ่าน Server เพราะ currentHealth เป็น NetworkVariable
+        if (d.healAmount > 0f)
+        {
+            var health = GetComponent<PlayerHealth>();
+            if (health != null)
+            {
+                health.currentHealth.Value = Mathf.Min(100f, health.currentHealth.Value + d.healAmount);
+            }
+        }
+        
+        // Buff: ส่ง ClientRpc ไปหา Owner เท่านั้น
+        ApplyConsumableBuffClientRpc(d.speedBoostAmount, d.speedBoostDuration,
+            d.throwBoostAmount, d.throwBoostDuration,
+            new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } });
+        
+        // Despawn item
+        currentItem.GetComponent<NetworkObject>().Despawn(true);
+        ClearItemClientRpc();
+    }
+
+    [ClientRpc]
+    void ApplyConsumableBuffClientRpc(float spd, float spdDur, float thr, float thrDur, ClientRpcParams _ = default)
+    {
+        if (spd > 0) StartCoroutine(SpeedBoostRoutine(spd, spdDur));
+        if (thr > 0) StartCoroutine(ThrowBoostRoutine(thr, thrDur));
+    }
+
+    IEnumerator SpeedBoostRoutine(float boost, float duration)
+    {
+        moveSpeed += boost; 
+        hasSpeedBoost = true;
+        // TODO: VFX เปลี่ยนสีตัวละคร หรือ trail effect ตรงนี้
+        yield return new WaitForSeconds(duration);
+        moveSpeed -= boost; 
+        hasSpeedBoost = false;
+    }
+
+    IEnumerator ThrowBoostRoutine(float boost, float duration)
+    {
+        throwForce += boost; 
+        hasThrowBoost = true;
+        yield return new WaitForSeconds(duration);
+        throwForce -= boost; 
+        hasThrowBoost = false;
     }
 
     // ==========================================
