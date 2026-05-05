@@ -8,14 +8,12 @@ public class ChargeBarUI : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private GameObject chargePanel;
     [SerializeField] private Image chargeFill;
-    [SerializeField] private TextMeshProUGUI pctText;
-    [SerializeField] private Image chargeIcon; // (Optional) ไอคอนบนหลอดชาร์จ
     
-    [Header("Charge Colors")]
-    [SerializeField] private Color colorLow = new Color(0.2f, 0.8f, 0.3f);    // เขียว
-    [SerializeField] private Color colorMid = new Color(1f, 0.8f, 0.1f);      // เหลือง
-    [SerializeField] private Color colorMax = new Color(1f, 0.25f, 0.15f);    // แดง
-    
+    [Header("Golf Style Texts")]
+    [SerializeField] private TextMeshProUGUI currentDmgText; // โชว์ดาเมจแบบเรียลไทม์
+    [SerializeField] private TextMeshProUGUI halfDmgText;    // ป้ายบอกดาเมจตรงกลางหลอด (50%)
+    [SerializeField] private TextMeshProUGUI maxDmgText;     // ป้ายบอกดาเมจสุดหลอด (100%)
+
     private PlayerController localPlayer;
     
     private void Start() 
@@ -25,7 +23,7 @@ public class ChargeBarUI : MonoBehaviour
     
     private IEnumerator FindPlayer()
     {
-        // วนหา PlayerController ที่เป็นตัวละครของเรา (IsOwner == true)
+        // วนหา PlayerController ที่เป็นตัวละครของเรา[cite: 20, 29]
         while (localPlayer == null)
         {
             foreach (var p in FindObjectsOfType<PlayerController>())
@@ -42,39 +40,37 @@ public class ChargeBarUI : MonoBehaviour
     
     private void Update()
     {
-        // ถ้าหา localPlayer ไม่เจอ หรือไม่ได้ถือไอเทมอยู่ ให้ซ่อน Panel
+        // ซ่อนหลอดถ้าไม่ได้ถือของ หรือหาตัวละครไม่เจอ[cite: 20, 29]
         if (localPlayer == null || localPlayer.currentItem == null)
         {
             if (chargePanel.activeSelf) chargePanel.SetActive(false); 
             return;
         }
         
+        // โชว์หลอดเฉพาะตอนกดชาร์จ[cite: 20, 29]
         bool show = localPlayer.isCharging;
         if (chargePanel.activeSelf != show) chargePanel.SetActive(show);
         
         if (!show) return;
         
-        // คำนวณเปอร์เซ็นต์ (0.0 ถึง 1.0)
+        // คำนวณเปอร์เซ็นต์หลอด (0.0 ถึง 1.0)[cite: 20, 29]
         float pct = Mathf.Clamp01(localPlayer.currentCharge / localPlayer.maxChargeTime);
-        chargeFill.fillAmount = pct;
-        
-        if (pctText != null)
-            pctText.text = Mathf.RoundToInt(pct * 100) + "%";
-        
-        // เลื่อนเปลี่ยนสีแบบ Smooth ตามเปอร์เซ็นต์การชาร์จ
-        Color targetColor = pct < 0.5f ? Color.Lerp(colorLow, colorMid, pct * 2f)
-                                       : Color.Lerp(colorMid, colorMax, (pct - 0.5f) * 2f);
-        chargeFill.color = Color.Lerp(chargeFill.color, targetColor, Time.deltaTime * 10f);
-        
-        // Pulse effect (ตุ้บๆ) ตอนชาร์จเต็ม
-        if (pct >= 0.99f)
+        chargeFill.fillAmount = pct; //[cite: 29]
+
+        // ดึงข้อมูลไอเทมในมือมาคำนวณโชว์บนหลอด[cite: 11, 20]
+        if (localPlayer.currentItem.TryGetComponent(out ThrowableItem item))
         {
-            float pulse = Mathf.Sin(Time.time * 8f) * 0.08f + 1f;
-            chargePanel.transform.localScale = Vector3.one * pulse;
-        }
-        else 
-        {
-            chargePanel.transform.localScale = Vector3.one;
+            float baseDmg = item.itemData.damage; //[cite: 11, 12]
+
+            // ตามลอจิกตอนปา: chargeMultiplier = 1f + pct (ชาร์จเต็มคือ x2)[cite: 20]
+            int maxDmg = Mathf.RoundToInt(baseDmg * 2f);      // ดาเมจ 100%
+            int halfDmg = Mathf.RoundToInt(baseDmg * 1.5f);   // ดาเมจ 50%
+            int currentDmg = Mathf.RoundToInt(baseDmg * (1f + pct)); // ดาเมจปัจจุบันที่กำลังชาร์จ
+
+            // อัปเดตตัวเลขลงบน UI แบบเกมกอล์ฟ
+            if (maxDmgText != null) maxDmgText.text = $"{maxDmg} Dmg";
+            if (halfDmgText != null) halfDmgText.text = $"{halfDmg} Dmg";
+            if (currentDmgText != null) currentDmgText.text = $"Power: {currentDmg}";
         }
     }
 }
