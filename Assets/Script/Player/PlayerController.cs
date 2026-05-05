@@ -97,7 +97,6 @@ public class PlayerController : NetworkBehaviour
     private bool hasSpeedBoost = false;
     private bool hasThrowBoost = false;
     
-   
     private float pickupDamageMultiplier = 1f; 
 
     [HideInInspector] public NetworkObject currentItem;
@@ -134,8 +133,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
  
-    
-    // [แก้ไข] จัดการตำแหน่งและสถานะเมื่อเปลี่ยนฉาก
     private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
     {
         StartCoroutine(RepositionRoutine(scene.name));
@@ -143,9 +140,8 @@ public class PlayerController : NetworkBehaviour
 
     private IEnumerator RepositionRoutine(string sceneName)
     {
-        yield return new WaitForSeconds(0.2f); // หน่วงนิดนึงให้ตัวละครเกิดเสร็จ
+        yield return new WaitForSeconds(0.2f); 
 
-        // รีเซ็ตสถานะการควบคุมของเครื่องตัวเอง
         this.enabled = true;
         isStunned = false;
         isCharging = false;
@@ -159,21 +155,18 @@ public class PlayerController : NetworkBehaviour
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             
-            // ปิดกล้องคนดู
             if (Camera.main != null && Camera.main.TryGetComponent(out SpectatorCameraController spec))
             {
                 spec.enabled = false;
             }
 
-            // โยนลงจากฟ้าเฉพาะเครื่องตัวเอง
             if (IsOwner) StartCoroutine(SpawnRandomlyAndDropCoroutine());
         }
-        else // ถ้าเป็นฉาก WaitingScene
+        else 
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // วาร์ปกลับห้องรอ
             if (IsOwner)
             {
                 if (controller != null) controller.enabled = false;
@@ -636,8 +629,15 @@ public class PlayerController : NetworkBehaviour
             isBullCharging = true;
             bullChargeDistanceLeft = bullChargeDistance;
             hitDuringCharge.Clear(); 
+            ClearChargeHitsServerRpc();
             StartChargeVFXServerRpc();
         }
+    }
+
+    [ServerRpc]
+    void ClearChargeHitsServerRpc()
+    {
+        hitDuringCharge.Clear();          // clear server's copy
     }
 
     [ServerRpc]
@@ -737,7 +737,6 @@ public class PlayerController : NetworkBehaviour
         Vector3 dashDir = transform.forward; AddImpact(dashDir * dashForce); 
     }
 
-    // === MODIFIED: Added ClientRpcParams to allow targeted stun calls from traps ===
     [ClientRpc]
     public void ApplyStunClientRpc(float duration, ClientRpcParams rpcParams = default)
     {
@@ -786,7 +785,6 @@ public class PlayerController : NetworkBehaviour
             ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
             if (GameManager.Instance != null && itemComponent != null && itemComponent.itemData != null)
             {
-                // === MODIFIED: Factored in the new pickupDamageMultiplier ===
                 float totalDmg = itemComponent.itemData.damage * chargeMultiplier * (isRaging ? rageThrowMultiplier : 1f) * pickupDamageMultiplier;
                 GameManager.Instance.RecordMatchStat(itemComponent.itemData.name, totalDmg);
             }
@@ -823,10 +821,6 @@ public class PlayerController : NetworkBehaviour
         catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
     }
 
-    // ==========================================
-    // === NEW PICKUP & TRAP API ===
-    // ==========================================
-
     [ClientRpc]
     public void ApplySpeedBoostClientRpc(float multiplier, float duration, ClientRpcParams rpcParams = default)
     {
@@ -846,7 +840,6 @@ public class PlayerController : NetworkBehaviour
 
     public void ApplyDamageBoostServer(float multiplier, float duration)
     {
-        // Damage is calculated inside ThrowItemServerRpc, so this state is handled entirely on the server.
         if (!IsServer) return;
         StartCoroutine(DamageBoostRoutine(multiplier, duration));
     }
@@ -864,7 +857,6 @@ public class PlayerController : NetworkBehaviour
         
         if (currentItem != null)
         {
-            // Despawns the item across the network
             currentItem.Despawn(true);
             ClearItemClientRpc();
         }

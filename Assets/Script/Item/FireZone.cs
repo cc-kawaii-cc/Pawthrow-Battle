@@ -11,6 +11,8 @@ public class FireZone : NetworkBehaviour
     // กำหนดค่าเริ่มต้นให้กับ NetworkVariable
     private NetworkVariable<float> timeLeft = new NetworkVariable<float>(0f);
     private float tickTimer = 0f;
+    
+    private bool isDespawning = false;
 
     public override void OnNetworkSpawn()
     {
@@ -26,8 +28,9 @@ public class FireZone : NetworkBehaviour
         if (!IsServer) return;
         
         timeLeft.Value -= Time.deltaTime;
-        if (timeLeft.Value <= 0f) 
+        if (timeLeft.Value <= 0f && !isDespawning) 
         { 
+            isDespawning = true;
             if (IsSpawned) GetComponent<NetworkObject>().Despawn(true); 
             return; 
         }

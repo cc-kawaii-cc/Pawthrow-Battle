@@ -25,6 +25,9 @@ public class SpectatorCameraController : MonoBehaviour
     private float rotationX = 0f;
     private float rotationY = 0f;
 
+    private float refreshTimer = 0f;
+    private const float REFRESH_INTERVAL = 0.5f;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -33,7 +36,13 @@ public class SpectatorCameraController : MonoBehaviour
 
     void Update()
     {
-        RefreshTargets();
+        refreshTimer += Time.deltaTime;
+        if (refreshTimer >= REFRESH_INTERVAL)
+        {
+            refreshTimer = 0f;
+            RefreshTargets();
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (currentMode == SpectatorMode.FollowPlayer)

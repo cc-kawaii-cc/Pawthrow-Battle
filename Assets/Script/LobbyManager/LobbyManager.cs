@@ -10,6 +10,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using Unity.Networking.Transport.Relay;
+using System.Text.RegularExpressions;
 
 public class LobbyManager : MonoBehaviour
 {
@@ -25,28 +26,20 @@ public class LobbyManager : MonoBehaviour
         else Destroy(gameObject);
         DontDestroyOnLoad(gameObject);
     }
-
-    // ... โค้ด Using ด้านบนเหมือนเดิม ...
-    // (เพิ่ม using System.Text.RegularExpressions; ไว้ด้านบนสุดด้วยนะครับ)
     
     public async Task<bool> AuthenticateAsync(string playerNameInput)
     {
-        // 1. ชื่อที่จะโชว์ให้คนอื่นเห็น (เว้นวรรคได้ ภาษาไทยได้)
         PlayerName = string.IsNullOrEmpty(playerNameInput) ? "Player_" + Random.Range(100, 999) : playerNameInput;
 
         try
         {
-            // 2. ทำความสะอาดชื่อเพื่อเอาไปใช้ล็อกอิน Unity Auth (ลบช่องว่าง ลบอักษรพิเศษ)
-            string safeProfileName = System.Text.RegularExpressions.Regex.Replace(PlayerName, "[^a-zA-Z0-9_-]", "");
+            string safeProfileName = Regex.Replace(PlayerName, "[^a-zA-Z0-9_-]", "");
             
-            // ถ้าลบอักษรแปลกๆ ออกหมดแล้วมันว่างเปล่า ให้สุ่มชื่อให้ใหม่
             if (string.IsNullOrEmpty(safeProfileName)) safeProfileName = "User_" + Random.Range(100, 999);
-            
-            // ป้องกันชื่อยาวเกิน 30 ตัวอักษร
             if (safeProfileName.Length > 30) safeProfileName = safeProfileName.Substring(0, 30);
 
             InitializationOptions options = new InitializationOptions();
-            options.SetProfile(safeProfileName); // ใช้ชื่อที่สะอาดแล้วล็อกอิน
+            options.SetProfile(safeProfileName); 
             
             await UnityServices.InitializeAsync(options);
 
@@ -88,7 +81,6 @@ public class LobbyManager : MonoBehaviour
                 Data = new Dictionary<string, DataObject>
                 {
                     { "RelayJoinCode", new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode) },
-                    // บันทึกสถานะห้องเริ่มต้นว่า "Waiting"
                     { "State", new DataObject(DataObject.VisibilityOptions.Public, "Waiting", DataObject.IndexOptions.S1) }
                 }
             };
@@ -128,7 +120,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    // ฟังก์ชันค้นหาห้องทั้งหมด
     public async Task<List<Lobby>> GetLobbiesListAsync()
     {
         try
@@ -151,7 +142,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    // ฟังก์ชันเข้าห้องจากหน้า List
     public async Task<bool> JoinLobbyByIdAsync(string lobbyId)
     {
         try
@@ -174,7 +164,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    
     public async void UpdateLobbyStateToPlaying()
     {
         if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
@@ -193,6 +182,7 @@ public class LobbyManager : MonoBehaviour
             catch (LobbyServiceException e) { Debug.LogError(e); }
         }
     }
+
     public async void UpdateLobbyStateToWaiting()
     {
         if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
@@ -223,7 +213,6 @@ public class LobbyManager : MonoBehaviour
 
     private async void HandleHeartbeat()
     {
-       
         if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
         {
             heartbeatTimer += Time.deltaTime;
@@ -239,7 +228,6 @@ public class LobbyManager : MonoBehaviour
 
     private async void HandleLobbyPollForUpdates()
     {
-        
         if (currentLobby != null)
         {
             lobbyPollTimer += Time.deltaTime;
@@ -248,17 +236,20 @@ public class LobbyManager : MonoBehaviour
                 lobbyPollTimer = 0f;
                 try
                 {
-                 
                     currentLobby = await LobbyService.Instance.GetLobbyAsync(currentLobby.Id);
                 }
                 catch (LobbyServiceException e)
                 {
                     Debug.LogWarning("Lobby Poll Error (อาจจะห้องโดนยุบไปแล้ว): " + e.Message);
+                    currentLobby = null;
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning("Lobby Poll Unexpected Error: " + e.Message);
                 }
             }
         }
     }
 
     public Lobby GetCurrentLobby() => currentLobby;
-    
 }

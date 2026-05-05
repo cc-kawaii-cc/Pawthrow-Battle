@@ -48,51 +48,45 @@ public class GameManager : NetworkBehaviour
                 DeclareWinnerClientRpc("Draw", 999, "Everyone died!");
             }
 
-            // [เพิ่มใหม่] เริ่มนับ 10 วิเพื่อพาทุกคนกลับห้องรอ
             StartCoroutine(RestartGameLoopRoutine());
         }
     }
 
-    // [เพิ่มใหม่] รูทีนพาทุกคนกลับ Lobby
     private IEnumerator RestartGameLoopRoutine()
     {
         if (LobbyManager.Instance != null) LobbyManager.Instance.UpdateLobbyStateToWaiting();
         
-        yield return new WaitForSeconds(10f); // รอ 10 วิ
+        yield return new WaitForSeconds(10f);
 
         if (IsServer)
         {
-            // 1. [เพิ่มใหม่] หาผู้เล่นทุกคนในฉาก แล้วใช้พลังเซิร์ฟเวอร์ชุบชีวิตพร้อมกัน
             PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
             foreach (var hp in allPlayers)
             {
                 hp.ReviveOnServer();
             }
 
-            // 2. ล้างค่าจบเกม แล้วดึงทุกคนสลับฉาก
             isGameOver = false;
             NetworkManager.Singleton.SceneManager.LoadScene("WaitingScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }
+    
     [ClientRpc]
     void DeclareWinnerClientRpc(string winnerCharType, ulong winnerId, string statsString)
     {
         GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
         if (menuUI != null)
         {
-            // ถ้าเป็นเครื่องของคนชนะ ให้โชว์หน้าจอ WINNER
             if (NetworkManager.Singleton.LocalClientId == winnerId)
             {
                 string winnerName = winnerCharType == "Draw" ? "DRAW!" : $"You Win! ({winnerCharType})";
                 menuUI.ShowGameWin(winnerName, statsString);
             }
             
-            // สั่งให้ทุกเครื่อง (ทั้งคนชนะ คนตาย คนดู) โชว์เวลานับถอยหลัง 10 วิ
             menuUI.StartEndGameCountdown();
         }
     }
 
-    // ... ส่วน Analytics ด้านล่าง ปล่อยไว้เหมือนเดิมเลยครับ ...
     private void RecordGameWinAnalytics(string winnerCharType)
     {
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
