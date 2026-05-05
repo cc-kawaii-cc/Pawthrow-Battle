@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour
 {
+    public float maxHealth = 100f;
+
     // ให้เขียนค่าได้เฉพาะ Server แต่ทุกคนอ่านค่าเพื่อไปโชว์หลอดเลือดได้
     public NetworkVariable<float> currentHealth = new NetworkVariable<float>(
         100f, 
@@ -18,9 +20,23 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (IsServer)
         {
-            currentHealth.Value = 100f;
+            currentHealth.Value = maxHealth;
             isDead = false;
         }
+    }
+
+    // --- NEW HEAL FUNCTION ---
+    public bool Heal(float amount)
+    {
+        // Only the Server can heal, and dead players can't be healed
+        if (!IsServer || isDead) return false;
+
+        // Don't heal if already at max health
+        if (currentHealth.Value >= maxHealth) return false;
+
+        // Apply healing, capped at maxHealth
+        currentHealth.Value = Mathf.Min(currentHealth.Value + amount, maxHealth);
+        return true; // Successfully healed
     }
 
     // ฟังก์ชันรับดาเมจและ Knockback

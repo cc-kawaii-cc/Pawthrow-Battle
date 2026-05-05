@@ -106,6 +106,60 @@ public class ThrowableItem : NetworkBehaviour
             Invoke(nameof(DespawnSelf), itemData.destroyDelay);
         }
     }
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        // Only the server processes walk-over traps to prevent double-triggering
+        if (!IsServer) return;
+
+        // Check if this item is meant to be a walk-over pickup/trap
+        if (itemData == null || !itemData.triggerOnWalk) return;
+
+        // Check if a player stepped on it
+        if (other.CompareTag("Player") && other.TryGetComponent(out PlayerController pc))
+        {
+            // 1. Walk-over Healing
+            if (itemData.healAmount > 0)
+            {
+                pc.GetComponent<PlayerHealth>()?.Heal(itemData.healAmount);
+            }
+
+            // 2. Walk-over Stun Trap
+            if (itemData.isStunTrap)
+            {
+                ClientRpcParams rpcParams = new ClientRpcParams 
+                    { Send = new ClientRpcSendParams { TargetClientIds = new[] { pc.OwnerClientId } } };
+                pc.ApplyStunClientRpc(itemData.stunDuration, rpcParams);
+            }
+
+            // 3. Walk-over Destroy Item Trap
+            if (itemData.destroysHeldItem)
+            {
+                pc.DestroyCurrentItemServer();
+            }
+
+            // 4. Walk-over Buffs (Speed / Throw)
+            if (itemData.speedBoostAmount > 0 || itemData.throwBoostAmount > 0)
+            {
+                // Note: The ClientRpc for Buffs is already in your PlayerController, we just call it here!
+                ClientRpcParams rpcParams = new ClientRpcParams 
+                    { Send = new ClientRpcSendParams { TargetClientIds = new[] { pc.OwnerClientId } } };
+                
+                // You might need to change ApplyConsumableBuffClientRpc to 'public' in PlayerController for this line to work.
+                pc.ApplyConsumableBuffClientRpc(itemData.speedBoostAmount, itemData.speedBoostDuration, 
+                                                itemData.throwBoostAmount, itemData.throwBoostDuration, rpcParams);
+            }
+
+            // 5. Walk-over x2 Damage Boost
+            if (itemData.damageBoostMultiplier > 1f)
+            {
+                pc.ApplyDamageBoostServer(itemData.damageBoostMultiplier, itemData.damageBoostDuration);
+            }
+
+            // Despawn the trap after it is triggered
+            GetComponent<NetworkObject>().Despawn(true);
+        }
+    }
 
     private void SpawnFireZone(Vector3 pos)
     {
@@ -161,4 +215,6 @@ public class ThrowableItem : NetworkBehaviour
             GetComponent<NetworkObject>().Despawn(true);
         }
     }
+    
+    
 }

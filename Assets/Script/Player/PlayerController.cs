@@ -96,6 +96,9 @@ public class PlayerController : NetworkBehaviour
     [Header("Consumable State")]
     private bool hasSpeedBoost = false;
     private bool hasThrowBoost = false;
+    
+    // === NEW: Variable to hold trap/pickup damage boost ===
+    private float pickupDamageMultiplier = 1f; 
 
     [HideInInspector] public NetworkObject currentItem;
     private Camera mainCamera;
@@ -395,28 +398,34 @@ public class PlayerController : NetworkBehaviour
         
         ItemData d = item.itemData;
         
-        // Heal: ต้องผ่าน Server เพราะ currentHealth เป็น NetworkVariable
+        // Heal
         if (d.healAmount > 0f)
         {
             var health = GetComponent<PlayerHealth>();
-            if (health != null)
-            {
-                health.currentHealth.Value = Mathf.Min(100f, health.currentHealth.Value + d.healAmount);
-            }
+            if (health != null) health.Heal(d.healAmount);
+        }
+
+        // Apply Damage Boost (Server Side)
+        if (d.damageBoostMultiplier > 1f)
+        {
+            ApplyDamageBoostServer(d.damageBoostMultiplier, d.damageBoostDuration);
         }
         
-        // Buff: ส่ง ClientRpc ไปหา Owner เท่านั้น
+        // Buff: Send ClientRpc to Owner for speed/throw adjustments
         ApplyConsumableBuffClientRpc(d.speedBoostAmount, d.speedBoostDuration,
             d.throwBoostAmount, d.throwBoostDuration,
             new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } });
         
-        // Despawn item
-        currentItem.GetComponent<NetworkObject>().Despawn(true);
+        // Destroy Item effect from consuming (if it's a cursed/penalty consumable)
+        if (d.destroysHeldItem) DestroyCurrentItemServer();
+
+        // Despawn the consumed item
+        currentItem.Despawn(true);
         ClearItemClientRpc();
     }
 
     [ClientRpc]
-    void ApplyConsumableBuffClientRpc(float spd, float spdDur, float thr, float thrDur, ClientRpcParams _ = default)
+    public void ApplyConsumableBuffClientRpc(float spd, float spdDur, float thr, float thrDur, ClientRpcParams _ = default)
     {
         if (spd > 0) StartCoroutine(SpeedBoostRoutine(spd, spdDur));
         if (thr > 0) StartCoroutine(ThrowBoostRoutine(thr, thrDur));
@@ -426,7 +435,6 @@ public class PlayerController : NetworkBehaviour
     {
         moveSpeed += boost; 
         hasSpeedBoost = true;
-        // TODO: VFX เปลี่ยนสีตัวละคร หรือ trail effect ตรงนี้
         yield return new WaitForSeconds(duration);
         moveSpeed -= boost; 
         hasSpeedBoost = false;
@@ -465,7 +473,6 @@ public class PlayerController : NetworkBehaviour
     void TriggerJumpVFXClientRpc()
     {
         if (jumpParticle != null) jumpParticle.Play();
-        else Debug.Log("JUMP VFX");
     }
 
     // ==========================================
@@ -678,8 +685,9 @@ public class PlayerController : NetworkBehaviour
         Vector3 dashDir = transform.forward; AddImpact(dashDir * dashForce); 
     }
 
+    // === MODIFIED: Added ClientRpcParams to allow targeted stun calls from traps ===
     [ClientRpc]
-    public void ApplyStunClientRpc(float duration)
+    public void ApplyStunClientRpc(float duration, ClientRpcParams rpcParams = default)
     {
         if (!IsOwner) return; StartCoroutine(StunRoutine(duration)); 
     }
@@ -726,7 +734,8 @@ public class PlayerController : NetworkBehaviour
             ThrowableItem itemComponent = currentItem.GetComponent<ThrowableItem>();
             if (GameManager.Instance != null && itemComponent != null && itemComponent.itemData != null)
             {
-                float totalDmg = itemComponent.itemData.damage * chargeMultiplier * (isRaging ? rageThrowMultiplier : 1f);
+                // === MODIFIED: Factored in the new pickupDamageMultiplier ===
+                float totalDmg = itemComponent.itemData.damage * chargeMultiplier * (isRaging ? rageThrowMultiplier : 1f) * pickupDamageMultiplier;
                 GameManager.Instance.RecordMatchStat(itemComponent.itemData.name, totalDmg);
             }
 
@@ -760,5 +769,52 @@ public class PlayerController : NetworkBehaviour
             AnalyticsService.Instance.Flush(); 
         }
         catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
+    }
+
+    // ==========================================
+    // === NEW PICKUP & TRAP API ===
+    // ==========================================
+
+    [ClientRpc]
+    public void ApplySpeedBoostClientRpc(float multiplier, float duration, ClientRpcParams rpcParams = default)
+    {
+        if (!IsOwner) return;
+        StartCoroutine(TrapSpeedBoostRoutine(multiplier, duration));
+    }
+
+    private IEnumerator TrapSpeedBoostRoutine(float multiplier, float duration)
+    {
+        float originalSpeed = moveSpeed;
+        moveSpeed *= multiplier; // Multiply speed
+        
+        yield return new WaitForSeconds(duration);
+        
+        moveSpeed = originalSpeed; // Revert back
+    }
+
+    public void ApplyDamageBoostServer(float multiplier, float duration)
+    {
+        // Damage is calculated inside ThrowItemServerRpc, so this state is handled entirely on the server.
+        if (!IsServer) return;
+        StartCoroutine(DamageBoostRoutine(multiplier, duration));
+    }
+
+    private IEnumerator DamageBoostRoutine(float multiplier, float duration)
+    {
+        pickupDamageMultiplier = multiplier;
+        yield return new WaitForSeconds(duration);
+        pickupDamageMultiplier = 1f; // Revert to standard 1x multiplier
+    }
+
+    public void DestroyCurrentItemServer()
+    {
+        if (!IsServer) return;
+        
+        if (currentItem != null)
+        {
+            // Despawns the item across the network
+            currentItem.Despawn(true);
+            ClearItemClientRpc();
+        }
     }
 }

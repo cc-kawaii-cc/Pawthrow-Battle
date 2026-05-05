@@ -25,6 +25,20 @@ public class ItemData : ScriptableObject
     [Tooltip("เพิ่ม throwForce ชั่วคราว (เหล้า/เบียร์)")]
     public float throwBoostAmount = 0f;
     public float throwBoostDuration = 0f;
+    
+    // === NEW: DAMAGE BOOST (x2 Damage Item) ===
+    [Tooltip("ตัวคูณดาเมจชั่วคราว (เช่น 2 = x2 Damage)")]
+    public float damageBoostMultiplier = 1f; // Default is 1 (normal damage)
+    public float damageBoostDuration = 0f;
+
+    // === NEW: TRAP & WALK-OVER SETTINGS ===
+    [Header("─── Trap Settings (Walk-over Pickups) ───")]
+    [Tooltip("ถ้าติ๊กถูก ไอเทมนี้จะทำงานทันทีที่เดินเหยียบ (เป็นกับดัก หรือบัฟเดินชน)")]
+    public bool triggerOnWalk = false;
+    [Tooltip("ถ้าเดินชน/ใช้งาน จะทำลายไอเทมที่อยู่ในมือผู้เล่นทันที")]
+    public bool destroysHeldItem = false;
+    [Tooltip("สตันผู้เล่นทันทีที่เดินชน (ใช้ร่วมกับ triggerOnWalk)")]
+    public bool isStunTrap = false;
 
     [Header("─── Explosion Settings ───")]
     public bool isExplosive = false;
@@ -34,8 +48,7 @@ public class ItemData : ScriptableObject
     public float explosionStunDuration = 1.2f;
     public GameObject explosionVFXPrefab; 
 
-    // --- เพิ่มส่วนนี้เข้าไป ---
     [Header("─── Fire Item Settings ───")]
     public bool isFireItem = false;
-    public GameObject fireZonePrefab; // prefab ที่มี FireZone.cs + NetworkObject
+    public GameObject fireZonePrefab; 
 }

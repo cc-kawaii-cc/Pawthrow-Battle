@@ -757,6 +757,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -839,7 +843,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4250627313
+  GlobalObjectIdHash: 4072139161
   InScenePlacedSourceGlobalObjectIdHash: 4072139161
   DeferredDespawnTick: 0
   Ownership: 1
@@ -909,6 +913,9 @@ MonoBehaviour:
   pickupRange: 2
   throwForce: 15
   maxChargeTime: 2
+  currentCharge: 0
+  isCharging: 0
+  currentItem: {fileID: 0}
   fallDeathY: -15
 --- !u!114 &1025844716119186729
 MonoBehaviour:
@@ -994,6 +1001,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   ShowTopMostFoldoutHeaderGroup: 1
+  maxHealth: 100
   currentHealth:
     m_InternalValue: 100
 --- !u!114 &-342447676350562959
