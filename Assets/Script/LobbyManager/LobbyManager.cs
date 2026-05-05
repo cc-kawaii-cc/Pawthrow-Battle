@@ -174,7 +174,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    // ฟังก์ชันเปลี่ยนสถานะห้องเป็น Playing
+    
     public async void UpdateLobbyStateToPlaying()
     {
         if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
@@ -193,9 +193,27 @@ public class LobbyManager : MonoBehaviour
             catch (LobbyServiceException e) { Debug.LogError(e); }
         }
     }
+    public async void UpdateLobbyStateToWaiting()
+    {
+        if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
+        {
+            try
+            {
+                UpdateLobbyOptions options = new UpdateLobbyOptions
+                {
+                    Data = new Dictionary<string, DataObject>
+                    {
+                        { "State", new DataObject(DataObject.VisibilityOptions.Public, "Waiting", DataObject.IndexOptions.S1) }
+                    }
+                };
+                currentLobby = await LobbyService.Instance.UpdateLobbyAsync(currentLobby.Id, options);
+            }
+            catch (LobbyServiceException e) { Debug.LogError(e); }
+        }
+    }
 
     private float heartbeatTimer;
-    private float lobbyPollTimer; // [เพิ่มใหม่] ตัวจับเวลาสำหรับรีเฟรชรายชื่อคน
+    private float lobbyPollTimer; 
 
     private void Update()
     {
@@ -205,7 +223,7 @@ public class LobbyManager : MonoBehaviour
 
     private async void HandleHeartbeat()
     {
-        // เลี้ยงห้องไม่ให้หายไป (เฉพาะ Host)
+       
         if (currentLobby != null && currentLobby.HostId == AuthenticationService.Instance.PlayerId)
         {
             heartbeatTimer += Time.deltaTime;
@@ -221,8 +239,7 @@ public class LobbyManager : MonoBehaviour
 
     private async void HandleLobbyPollForUpdates()
     {
-        // [เพิ่มใหม่] ฟังก์ชันทำให้ห้องเป็น Real-time! 
-        // สั่งให้ทุกคน (ทั้งหัวห้องและลูกเรือ) ดึงข้อมูลอัปเดตทุกๆ 1.5 วินาที
+        
         if (currentLobby != null)
         {
             lobbyPollTimer += Time.deltaTime;
@@ -231,7 +248,7 @@ public class LobbyManager : MonoBehaviour
                 lobbyPollTimer = 0f;
                 try
                 {
-                    // โหลดข้อมูลล่าสุดจากเซิร์ฟเวอร์มาทับของเดิม
+                 
                     currentLobby = await LobbyService.Instance.GetLobbyAsync(currentLobby.Id);
                 }
                 catch (LobbyServiceException e)

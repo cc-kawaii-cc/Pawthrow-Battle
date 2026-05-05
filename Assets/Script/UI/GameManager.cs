@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Services.Analytics;
 
@@ -8,10 +9,7 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance;
 
     [Header("Game State")]
-    public List<PlayerController> alivePlayers = new List<PlayerController>();
     private bool isGameOver = false;
-
-    // [โค้ดเดิมของคุณ: ตัวแปรอื่นๆ เช่น เวลา, UI References]
 
     private void Awake()
     {
@@ -23,80 +21,90 @@ public class GameManager : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        // [โค้ดเดิมของคุณ: จัดการลบผู้เล่นออกจาก alivePlayers]
-        // ตัวอย่าง:
-        // PlayerController deadPlayer = alivePlayers.Find(p => p.OwnerClientId == clientId);
-        // if (deadPlayer != null) alivePlayers.Remove(deadPlayer);
+        List<PlayerController> aliveList = new List<PlayerController>();
+        PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
+        
+        foreach (var hp in allPlayers)
+        {
+            if (!hp.isDead && hp.TryGetComponent(out PlayerController pc))
+            {
+                aliveList.Add(pc);
+            }
+        }
 
-        // เช็คว่าเหลือคนสุดท้ายหรือยัง
-        if (alivePlayers.Count == 1 && !isGameOver)
+        if (aliveList.Count <= 1 && !isGameOver)
         {
             isGameOver = true;
-            PlayerController winner = alivePlayers[0];
-            string winnerCharType = winner.characterType.ToString();
+            
+            if (aliveList.Count == 1)
+            {
+                PlayerController winner = aliveList[0];
+                string winnerCharType = winner.characterType.ToString();
+                RecordGameWinAnalytics(winnerCharType);
+                DeclareWinnerClientRpc(winnerCharType, winner.OwnerClientId, "Survivor!");
+            }
+            else
+            {
+                DeclareWinnerClientRpc("Draw", 999, "Everyone died!");
+            }
 
-            // Record analytics บน Server (ถูกต้อง ตัวนี้รันบน Server แล้ว)
-            RecordGameWinAnalytics(winnerCharType);
-
-            // [โค้ดเดิมของคุณ: จัดเตรียมข้อมูล statsString]
-            string statsString = "ตัวอย่าง Stats ยอดนักปา"; 
-
-            // ส่งข้อมูลผู้ชนะไปให้ Client ทุกคนโชว์หน้า UI
-            DeclareWinnerClientRpc(winnerCharType, winner.NetworkObjectId, statsString);
+            // [เพิ่มใหม่] เริ่มนับ 10 วิเพื่อพาทุกคนกลับห้องรอ
+            StartCoroutine(RestartGameLoopRoutine());
         }
     }
 
+    // [เพิ่มใหม่] รูทีนพาทุกคนกลับ Lobby
+    private IEnumerator RestartGameLoopRoutine()
+    {
+        if (LobbyManager.Instance != null) LobbyManager.Instance.UpdateLobbyStateToWaiting();
+        
+        yield return new WaitForSeconds(10f); // รอ 10 วิ
+
+        if (IsServer)
+        {
+            // 1. [เพิ่มใหม่] หาผู้เล่นทุกคนในฉาก แล้วใช้พลังเซิร์ฟเวอร์ชุบชีวิตพร้อมกัน
+            PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
+            foreach (var hp in allPlayers)
+            {
+                hp.ReviveOnServer();
+            }
+
+            // 2. ล้างค่าจบเกม แล้วดึงทุกคนสลับฉาก
+            isGameOver = false;
+            NetworkManager.Singleton.SceneManager.LoadScene("WaitingScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+    }
     [ClientRpc]
     void DeclareWinnerClientRpc(string winnerCharType, ulong winnerId, string statsString)
     {
-        // [โค้ดเดิมของคุณ: ลอจิกจัดการ Camera, UI แสดงผลคนชนะ (ห้ามแก้)]
-        
-        Debug.Log($"ผู้ชนะคือ: {winnerCharType} ID: {winnerId}");
+        GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
+        if (menuUI != null)
+        {
+            // ถ้าเป็นเครื่องของคนชนะ ให้โชว์หน้าจอ WINNER
+            if (NetworkManager.Singleton.LocalClientId == winnerId)
+            {
+                string winnerName = winnerCharType == "Draw" ? "DRAW!" : $"You Win! ({winnerCharType})";
+                menuUI.ShowGameWin(winnerName, statsString);
+            }
+            
+            // สั่งให้ทุกเครื่อง (ทั้งคนชนะ คนตาย คนดู) โชว์เวลานับถอยหลัง 10 วิ
+            menuUI.StartEndGameCountdown();
+        }
     }
 
+    // ... ส่วน Analytics ด้านล่าง ปล่อยไว้เหมือนเดิมเลยครับ ...
     private void RecordGameWinAnalytics(string winnerCharType)
     {
-        // Called from Server context only
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
-
-        try
-        {
-            CustomEvent winEvent = new CustomEvent("game_win")
-            {
-                { "winning_character", winnerCharType }
-            };
-            AnalyticsService.Instance.RecordEvent(winEvent);
-            AnalyticsService.Instance.Flush();
-        }
-        catch (System.Exception e) 
-        { 
-            Debug.LogWarning("Analytics Error: " + e.Message); 
-        }
+        try { AnalyticsService.Instance.RecordEvent(new CustomEvent("game_win") { { "winning_character", winnerCharType } }); AnalyticsService.Instance.Flush(); } catch { }
     }
 
     public void RecordEliminationStat(string playerId)
     {
-        // ฟังก์ชันนี้จะถูกเรียกจาก PlayerHealth.Die()
         if (!IsServer) return;
         if (AnalyticsManager.Instance?.disableAnalyticsForTesting == true) return;
-        
-        try 
-        {
-            AnalyticsService.Instance.RecordEvent(new CustomEvent("player_eliminated") 
-            { 
-                { "client_id", playerId } 
-            });
-            AnalyticsService.Instance.Flush();
-        } 
-        catch (System.Exception e)
-        {
-            Debug.LogWarning("Analytics Elimination Error: " + e.Message); 
-        }
+        try { AnalyticsService.Instance.RecordEvent(new CustomEvent("player_eliminated") { { "client_id", playerId } }); AnalyticsService.Instance.Flush(); } catch { }
     }
 
-    // [โค้ดเดิมของคุณ: ฟังก์ชันอื่นๆ เช่น RecordMatchStat ที่เอาไว้เก็บสถิติตอนปาของ]
-    public void RecordMatchStat(string itemName, float totalDamage)
-    {
-        // [ลอจิกเดิม]
-    }
+    public void RecordMatchStat(string itemName, float totalDamage) { }
 }

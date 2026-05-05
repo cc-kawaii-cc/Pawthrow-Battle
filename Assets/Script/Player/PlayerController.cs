@@ -97,7 +97,7 @@ public class PlayerController : NetworkBehaviour
     private bool hasSpeedBoost = false;
     private bool hasThrowBoost = false;
     
-    // === NEW: Variable to hold trap/pickup damage boost ===
+   
     private float pickupDamageMultiplier = 1f; 
 
     [HideInInspector] public NetworkObject currentItem;
@@ -129,6 +129,57 @@ public class PlayerController : NetworkBehaviour
             }
 
             StartCoroutine(SpawnRandomlyAndDropCoroutine());
+            
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+    }
+ 
+    
+    // [แก้ไข] จัดการตำแหน่งและสถานะเมื่อเปลี่ยนฉาก
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        StartCoroutine(RepositionRoutine(scene.name));
+    }
+
+    private IEnumerator RepositionRoutine(string sceneName)
+    {
+        yield return new WaitForSeconds(0.2f); // หน่วงนิดนึงให้ตัวละครเกิดเสร็จ
+
+        // รีเซ็ตสถานะการควบคุมของเครื่องตัวเอง
+        this.enabled = true;
+        isStunned = false;
+        isCharging = false;
+        currentCharge = 0f;
+        verticalVelocity = 0f;
+        impact = Vector3.zero;
+        if (controller != null) controller.enabled = true;
+
+        if (sceneName == "CITY")
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            
+            // ปิดกล้องคนดู
+            if (Camera.main != null && Camera.main.TryGetComponent(out SpectatorCameraController spec))
+            {
+                spec.enabled = false;
+            }
+
+            // โยนลงจากฟ้าเฉพาะเครื่องตัวเอง
+            if (IsOwner) StartCoroutine(SpawnRandomlyAndDropCoroutine());
+        }
+        else // ถ้าเป็นฉาก WaitingScene
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            // วาร์ปกลับห้องรอ
+            if (IsOwner)
+            {
+                if (controller != null) controller.enabled = false;
+                transform.position = new Vector3(0, 15f, 0); 
+                if (controller != null) controller.enabled = true;
+            }
         }
     }
 
@@ -196,6 +247,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (controller != null && !controller.enabled) return; 
+        if (TryGetComponent(out PlayerHealth hp) && hp.isDead) return;
 
         if (SceneManager.GetActiveScene().name == "CITY")
         {
@@ -816,5 +868,13 @@ public class PlayerController : NetworkBehaviour
             currentItem.Despawn(true);
             ClearItemClientRpc();
         }
+    }
+    public override void OnNetworkDespawn()
+    {
+        if (IsOwner)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+        base.OnNetworkDespawn();
     }
 }

@@ -16,7 +16,7 @@ public class ItemSpawner : NetworkBehaviour
 
     void Update()
     {
-        if (!IsServer) return;
+        if (!IsSpawned || !IsServer || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return;
 
         timer += Time.deltaTime;
         if (timer >= spawnInterval)
