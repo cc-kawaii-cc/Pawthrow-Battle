@@ -26317,6 +26317,7 @@ MonoBehaviour:
   spawnCenter: {x: 50, y: 0, z: 48}
   spawnAreaSize: {x: 200, y: 140}
   spawnHeight: 25
+  maxItemsOnMap: 50
 --- !u!114 &1540849769
 MonoBehaviour:
   m_ObjectHideFlags: 0
