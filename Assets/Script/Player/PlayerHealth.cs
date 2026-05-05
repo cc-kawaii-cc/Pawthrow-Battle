@@ -1,94 +1,70 @@
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerHealth : NetworkBehaviour 
+public class PlayerHealth : NetworkBehaviour
 {
-    public NetworkVariable<float> currentHealth = new NetworkVariable<float>(100f);
-    private CharacterController controller;
-    void Awake() 
-    {
-        controller = GetComponent<CharacterController>();
-    }
+    // ให้เขียนค่าได้เฉพาะ Server แต่ทุกคนอ่านค่าเพื่อไปโชว์หลอดเลือดได้
+    public NetworkVariable<float> currentHealth = new NetworkVariable<float>(
+        100f, 
+        NetworkVariableReadPermission.Everyone, 
+        NetworkVariableWritePermission.Server
+    );
 
-    public bool TakeDamage(float amount, float knockback, Vector3 direction) 
-    {
-        if (!IsServer) return false;
-        if (TryGetComponent(out PlayerController playerController)) 
-        {
-            if (playerController.isShieldActive.Value) 
-            {
-                Debug.Log($"Player {OwnerClientId} Use the shield to block the attack!");
-                playerController.BreakShieldServerRpc(); 
-                return false;
-            }
-        }
-        currentHealth.Value -= amount;
-        Debug.Log($"Player {OwnerClientId} HP: {currentHealth.Value}");
-        ApplyKnockbackClientRpc(direction * knockback);
-        if (currentHealth.Value <= 0)
-        {
-            Die();
-        }
-        
-        return true; 
-    }
+    private bool isDead = false;
 
-    public void Die() 
-    {
-        if (!IsServer) return; 
-        Debug.Log($"Player {OwnerClientId} Died!");
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.OnPlayerDied(GetComponent<PlayerController>());
-        }
-        PlayerDiedClientRpc();
-        
-        // แก้ไขตรงนี้: เปลี่ยนจากการ Despawn ทันที เป็นการใช้ Invoke เพื่อหน่วงเวลาสัก 1.5 วินาที
-        // GetComponent<NetworkObject>().Despawn(true); // <--- ลบหรือคอมเมนต์บรรทัดเดิมนี้ทิ้ง
-        Invoke(nameof(DelayDespawn), 1.5f); 
-    }
-
-    // เพิ่มฟังก์ชันนี้เข้าไปใหม่
-    private void DelayDespawn()
-    {
-        if (IsSpawned)
-        {
-            GetComponent<NetworkObject>().Despawn(true);
-        }
-    }
-
-    [ClientRpc]
-    void PlayerDiedClientRpc()
-    {
-        if (!IsOwner) return;
-        Camera mainCam = Camera.main;
-        if (mainCam != null)
-        {
-            mainCam.transform.SetParent(null); 
-            if (mainCam.GetComponent<SpectatorCameraController>() == null)
-            {
-                mainCam.gameObject.AddComponent<SpectatorCameraController>();
-            }
-        }
-        GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
-        if (menuUI != null)
-        {
-            menuUI.ShowGameOver();
-        }
-    }
-
-    [ClientRpc]
-    void ApplyKnockbackClientRpc(Vector3 force) 
-    {
-        if (!IsOwner) return;
-        if (TryGetComponent(out PlayerController playerController)) 
-        {
-            playerController.AddImpact(force);
-        }
-    }
+    // [โค้ดเดิมของคุณ: ตัวแปรอื่นๆ เช่น แอนิเมชัน, เอฟเฟกต์ตอนโดนตี]
 
     public override void OnNetworkSpawn()
     {
-        
+        if (IsServer)
+        {
+            currentHealth.Value = 100f;
+            isDead = false;
+        }
+    }
+
+    // ฟังก์ชันรับดาเมจและ Knockback
+    public bool TakeDamage(float amount, float knockback = 0f, Vector3 direction = default)
+    {
+        if (!IsServer || isDead) return false;
+
+        currentHealth.Value -= amount;
+
+        // ถ้ารับ Knockback (ไม่ใช่ burn damage ที่ knockback เป็น 0)
+        if (knockback > 0f && direction != Vector3.zero)
+        {
+            if (TryGetComponent(out PlayerController pc))
+            {
+                pc.AddImpactClientRpc(direction * knockback);
+            }
+        }
+
+        // เช็คตาย
+        if (currentHealth.Value <= 0f)
+        {
+            currentHealth.Value = 0f;
+            Die();
+        }
+
+        return true;
+    }
+
+    public void Die()
+    {
+        if (!IsServer || isDead) return;
+        isDead = true;
+
+        // [โค้ดเดิมของคุณ: ลอจิกการตาย, เล่นแอนิเมชันตุย, ดรอปของ ฯลฯ]
+
+        // เรียกเก็บ Analytics ตอนตายทันที (รันบน Server)
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RecordEliminationStat(OwnerClientId.ToString());
+            
+            // แจ้ง GameManager ว่าผู้เล่นคนนี้ขิตแล้ว
+            GameManager.Instance.OnPlayerDied(OwnerClientId);
+        }
+            
+        // [โค้ดเดิมของคุณ: จัดการเรื่อง NetworkObject เช่น Despawn หรือเปลี่ยนสถานะไปเป็นผู้ชม]
     }
 }

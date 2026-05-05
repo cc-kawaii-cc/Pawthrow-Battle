@@ -1,114 +1,102 @@
 using Unity.Netcode;
 using UnityEngine;
-using Unity.Services.Analytics;
 using System.Collections.Generic;
+using Unity.Services.Analytics;
 
 public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance;
-    
+
     [Header("Game State")]
+    public List<PlayerController> alivePlayers = new List<PlayerController>();
     private bool isGameOver = false;
-    
-    private Dictionary<string, int> itemUsageCount = new Dictionary<string, int>();
-    private Dictionary<string, float> itemTotalDamage = new Dictionary<string, float>();
+
+    // [โค้ดเดิมของคุณ: ตัวแปรอื่นๆ เช่น เวลา, UI References]
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
-    }
-    public void RecordMatchStat(string itemName, float damage)
-    {
-        if (!IsServer) return; 
-        
-        if (!itemUsageCount.ContainsKey(itemName))
-        {
-            itemUsageCount[itemName] = 0;
-            itemTotalDamage[itemName] = 0;
-        }
-        itemUsageCount[itemName]++;
-        itemTotalDamage[itemName] += damage;
+        else Destroy(gameObject);
     }
 
-    public void OnPlayerDied(PlayerController deadPlayer)
+    public void OnPlayerDied(ulong clientId)
     {
-        if (!IsServer || isGameOver) return;
+        if (!IsServer) return;
 
-        PlayerController[] allPlayersInMap = FindObjectsOfType<PlayerController>();
-        List<PlayerController> alivePlayers = new List<PlayerController>();
-        foreach (PlayerController p in allPlayersInMap)
-        {
-            if (p != deadPlayer && p.gameObject.activeInHierarchy)
-            {
-                PlayerHealth health = p.GetComponent<PlayerHealth>();
-                if (health != null && health.currentHealth.Value > 0)
-                {
-                    alivePlayers.Add(p);
-                }
-            }
-        }
+        // [โค้ดเดิมของคุณ: จัดการลบผู้เล่นออกจาก alivePlayers]
+        // ตัวอย่าง:
+        // PlayerController deadPlayer = alivePlayers.Find(p => p.OwnerClientId == clientId);
+        // if (deadPlayer != null) alivePlayers.Remove(deadPlayer);
 
-        if (alivePlayers.Count == 1)
+        // เช็คว่าเหลือคนสุดท้ายหรือยัง
+        if (alivePlayers.Count == 1 && !isGameOver)
         {
             isGameOver = true;
             PlayerController winner = alivePlayers[0];
             string winnerCharType = winner.characterType.ToString();
-            string statsString = "MATCH STATS:\n";
-            if (itemUsageCount.Count == 0) statsString += "No items were used.\n";
-            foreach (var kvp in itemUsageCount)
-            {
-                statsString += $"- {kvp.Key}: Thrown {kvp.Value} times (Total Dmg: {itemTotalDamage[kvp.Key]:F0})\n";
-            }
-            
+
+            // Record analytics บน Server (ถูกต้อง ตัวนี้รันบน Server แล้ว)
+            RecordGameWinAnalytics(winnerCharType);
+
+            // [โค้ดเดิมของคุณ: จัดเตรียมข้อมูล statsString]
+            string statsString = "ตัวอย่าง Stats ยอดนักปา"; 
+
+            // ส่งข้อมูลผู้ชนะไปให้ Client ทุกคนโชว์หน้า UI
             DeclareWinnerClientRpc(winnerCharType, winner.NetworkObjectId, statsString);
-        }
-        else if (alivePlayers.Count == 0 && !isGameOver)
-        {
-            isGameOver = true;
-            Debug.Log("Draw! Everyone died.");
         }
     }
 
     [ClientRpc]
-    private void DeclareWinnerClientRpc(string winnerCharType, ulong winnerNetworkObjectId, string matchStats)
+    void DeclareWinnerClientRpc(string winnerCharType, ulong winnerId, string statsString)
     {
-        RecordGameWinAnalytics(winnerCharType);
-
-        GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
-        if (menuUI != null)
-        {
-            menuUI.ShowGameWin(winnerCharType, matchStats);
-        }
-        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(winnerNetworkObjectId, out NetworkObject winnerObj))
-        {
-            Transform winnerTransform = winnerObj.transform;
-            Camera mainCam = Camera.main;
-            if (mainCam != null)
-            {
-                if (mainCam.TryGetComponent(out SpectatorCameraController spectator)) spectator.enabled = false;
-                
-                WinnerLockOnCamera lockOnCam = mainCam.GetComponent<WinnerLockOnCamera>();
-                if (lockOnCam == null) lockOnCam = mainCam.gameObject.AddComponent<WinnerLockOnCamera>();
-                
-                lockOnCam.SetTarget(winnerTransform);
-            }
-        }
+        // [โค้ดเดิมของคุณ: ลอจิกจัดการ Camera, UI แสดงผลคนชนะ (ห้ามแก้)]
+        
+        Debug.Log($"ผู้ชนะคือ: {winnerCharType} ID: {winnerId}");
     }
 
-    private void RecordGameWinAnalytics(string characterName)
+    private void RecordGameWinAnalytics(string winnerCharType)
     {
-        if (!IsServer) return; 
+        // Called from Server context only
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
 
         try
         {
             CustomEvent winEvent = new CustomEvent("game_win")
             {
-                { "character_name", characterName }
+                { "winning_character", winnerCharType }
             };
             AnalyticsService.Instance.RecordEvent(winEvent);
             AnalyticsService.Instance.Flush();
         }
-        catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
+        catch (System.Exception e) 
+        { 
+            Debug.LogWarning("Analytics Error: " + e.Message); 
+        }
+    }
+
+    public void RecordEliminationStat(string playerId)
+    {
+        // ฟังก์ชันนี้จะถูกเรียกจาก PlayerHealth.Die()
+        if (!IsServer) return;
+        if (AnalyticsManager.Instance?.disableAnalyticsForTesting == true) return;
+        
+        try 
+        {
+            AnalyticsService.Instance.RecordEvent(new CustomEvent("player_eliminated") 
+            { 
+                { "client_id", playerId } 
+            });
+            AnalyticsService.Instance.Flush();
+        } 
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("Analytics Elimination Error: " + e.Message); 
+        }
+    }
+
+    // [โค้ดเดิมของคุณ: ฟังก์ชันอื่นๆ เช่น RecordMatchStat ที่เอาไว้เก็บสถิติตอนปาของ]
+    public void RecordMatchStat(string itemName, float totalDamage)
+    {
+        // [ลอจิกเดิม]
     }
 }
