@@ -4,45 +4,55 @@ using UnityEngine;
 
 public class DecoyController : NetworkBehaviour
 {
-    // กำหนดค่าเริ่มต้นเป็น 0 ไว้ก่อน เดี๋ยว ServerRpc จะเป็นคนเซ็ตค่าให้ตอน Spawn
-    public NetworkVariable<float> lifetime = new NetworkVariable<float>(0f);
-    
+    [Header("Decoy Settings")]
+    public float moveSpeed = 2.5f;     // ความเร็วเดิน (ช้าๆ เนียนๆ)
+    public float rotationSpeed = 60f; // ความเร็วการหมุน (ทำให้เดินวน)
+    public float lifetime = 5f;       // ระยะเวลาที่จะหายไปเอง
+
+    [Header("VFX")]
     public ParticleSystem spawnVFX;
     public ParticleSystem despawnVFX;
     
-    private bool isDespawning = false; // ป้องกันการเรียก Despawn ซ้ำซ้อน
+    private bool isDespawning = false;
 
     public override void OnNetworkSpawn()
     {
-        // เล่น Effect ตอนเกิด (ทำงานทุก Client)
+        // เล่นเอฟเฟกต์ตอนเกิดทุกเครื่อง
         if (spawnVFX != null) spawnVFX.Play();
+        
+        // ให้ Server เริ่มนับเวลาถอยหลังทำลายตัวเอง
+        if (IsServer)
+        {
+            Invoke(nameof(StartDespawn), lifetime);
+        }
     }
 
     void Update()
     {
-        // ให้ Server เป็นคนจัดการเวลาเท่านั้น
+        // การเคลื่อนที่: ให้ขยับเฉพาะใน Server แล้ว NetworkTransform จะซิงก์ไป Client เอง
         if (!IsServer || isDespawning) return;
 
-        lifetime.Value -= Time.deltaTime;
-        
-        if (lifetime.Value <= 0f) 
-        {
-            StartCoroutine(DespawnRoutine());
-        }
+        // เดินไปข้างหน้าช้าๆ และหมุนตัวเล็กน้อยเพื่อให้เดินวน
+        transform.position += transform.forward * moveSpeed * Time.deltaTime;
+        transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+    }
+
+    private void StartDespawn()
+    {
+        if (isDespawning) return;
+        StartCoroutine(DespawnRoutine());
     }
 
     private IEnumerator DespawnRoutine()
     {
         isDespawning = true;
         
-        // แจ้งให้ทุก Client เล่น Effect ทำลายร่างปลอมก่อน
+        // สั่งให้ทุกเครื่องเล่นเอฟเฟกต์ก่อนหายไป
         PlayDespawnVFXClientRpc();
         
-        // รอให้ Effect เล่น (ปรับเวลาให้ตรงกับความยาวของ Effect คุณได้เลย)
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.5f); // รอให้เอฟเฟกต์เล่นจบเล็กน้อย
         
-        // Despawn ออกจาก Network
-        if (IsSpawned) 
+        if (IsSpawned)
         {
             GetComponent<NetworkObject>().Despawn(true);
         }
@@ -54,15 +64,13 @@ public class DecoyController : NetworkBehaviour
         if (despawnVFX != null) despawnVFX.Play();
     }
 
-    // เมื่อถูกไอเทมปาใส่ ให้ Decoy หายทันที
+    // ถ้าโดนของปาใส่ ให้หายไปทันที
     void OnTriggerEnter(Collider other)
     {
         if (!IsServer || isDespawning) return;
-
-        // เช็คว่าสิ่งที่พุ่งเข้ามาชนมีสคริปต์ ThrowableItem หรือไม่
         if (other.GetComponent<ThrowableItem>() != null)
         {
-            StartCoroutine(DespawnRoutine());
+            StartDespawn();
         }
     }
 }

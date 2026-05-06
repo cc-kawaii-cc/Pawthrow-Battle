@@ -5,15 +5,16 @@ public class PlayerHealth : NetworkBehaviour
 {
     public float maxHealth = 100f;
 
-
     public NetworkVariable<float> currentHealth = new NetworkVariable<float>(
         100f,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
 
-
     public bool isDead = false;
+    
+    [Header("Decoy Settings")]
+    public bool isDecoy = false; // [เพิ่มใหม่] ไว้ติ๊กบอกระบบว่านี่คือร่างปลอม
 
     public override void OnNetworkSpawn()
     {
@@ -26,7 +27,6 @@ public class PlayerHealth : NetworkBehaviour
 
     public bool Heal(float amount)
     {
-
         if (!IsServer || isDead) return false;
         if (currentHealth.Value >= maxHealth) return false;
 
@@ -38,7 +38,6 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (!IsServer || isDead) return false;
 
-        // [เพิ่มใหม่] ถ้าอยู่ห้องรอ (WaitingScene) ปาของใส่กันได้ กระเด็นได้ แต่ "เลือดไม่ลด" เด็ดขาด
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "WaitingScene")
         {
             amount = 0f; 
@@ -68,7 +67,8 @@ public class PlayerHealth : NetworkBehaviour
         if (!IsServer || isDead) return;
         isDead = true;
 
-        if (GameManager.Instance != null)
+        // ไม่ส่งข้อมูลให้ GameManager ถ้านี่คือร่างปลอม
+        if (!isDecoy && GameManager.Instance != null)
         {
             GameManager.Instance.RecordEliminationStat(OwnerClientId.ToString());
             GameManager.Instance.OnPlayerDied(OwnerClientId);
@@ -80,8 +80,6 @@ public class PlayerHealth : NetworkBehaviour
         }
 
         PlayerDiedClientRpc();
-
-        // [แก้ไข] เปลี่ยนจาก Invoke(nameof(DespawnPlayer)) มาเรียกใช้คำสั่งซ่อนตัวละครแทน
         HidePlayerClientRpc();
     }
 
@@ -89,17 +87,13 @@ public class PlayerHealth : NetworkBehaviour
     private void HidePlayerClientRpc()
     {
         if (TryGetComponent(out CharacterController cc)) cc.enabled = false;
-
-        
         foreach (var r in GetComponentsInChildren<Renderer>()) r.enabled = false;
         foreach (var c in GetComponentsInChildren<Collider>()) c.enabled = false;
-
-        
         foreach (var canvas in GetComponentsInChildren<Canvas>()) canvas.enabled = false;
     }
+    
     public void ReviveOnServer()
     {
-        
         if (!IsServer || !IsSpawned) return;
         
         isDead = false;
@@ -112,7 +106,6 @@ public class PlayerHealth : NetworkBehaviour
     private void ReviveClientRpc()
     {
         isDead = false;
-        
         if (TryGetComponent(out CharacterController cc)) cc.enabled = true;
         foreach (var r in GetComponentsInChildren<Renderer>()) r.enabled = true;
         foreach (var c in GetComponentsInChildren<Collider>()) c.enabled = true;
@@ -129,14 +122,14 @@ public class PlayerHealth : NetworkBehaviour
             pc.enabled = false;
         }
 
-        if (IsOwner)
+        // โชว์จอ Game Over เฉพาะผู้เล่นจริงเท่านั้น
+        if (IsOwner && !isDecoy) 
         {
             GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
             if (menuUI != null)
             {
                 menuUI.ShowGameOver();
             }
-
 
             if (Camera.main != null)
             {

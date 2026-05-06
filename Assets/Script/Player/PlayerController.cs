@@ -77,17 +77,12 @@ public class PlayerController : NetworkBehaviour
     
     [Header("Camera Settings")]
     public float cameraDistance = 5f;
-    
-    
     public float minCameraDistance = 1.5f; 
     public float maxCameraDistance = 12f;  
     public float zoomSpeed = 5f;           
-    
     public float mouseSensitivity = 3f;
-    
     public float minPitch = -89f; 
     public float maxPitch = 89f; 
-    
     public Vector3 targetOffset = new Vector3(0, 1.5f, 0);
     
     [Header("Pick & Throw Settings")]
@@ -136,7 +131,6 @@ public class PlayerController : NetworkBehaviour
             }
 
             StartCoroutine(SpawnRandomlyAndDropCoroutine());
-            
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
     }
@@ -165,17 +159,14 @@ public class PlayerController : NetworkBehaviour
 
         if (sceneName == "CITY")
         {
-            
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-
             if (IsOwner) StartCoroutine(SpawnRandomlyAndDropCoroutine());
         }
         else 
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-
             if (IsOwner)
             {
                 if (controller != null) controller.enabled = false;
@@ -184,10 +175,10 @@ public class PlayerController : NetworkBehaviour
             }
         }
     }
+
     [ServerRpc]
     private void RequestResetStatsServerRpc()
     {
-        // Server เป็นคนจัดการเลือดและทำลายไอเทมให้ Client อย่างถูกต้อง
         if (TryGetComponent(out PlayerHealth hp)) hp.currentHealth.Value = hp.maxHealth;
         DestroyCurrentItemServer();
     }
@@ -195,32 +186,19 @@ public class PlayerController : NetworkBehaviour
     private IEnumerator SpawnRandomlyAndDropCoroutine()
     {
         if (controller != null) controller.enabled = false;
-
         Vector3 safeSkyPosition = GetSafeRandomPosition();
         transform.position = safeSkyPosition;
-
         yield return null; 
-
         if (controller != null) controller.enabled = true;
     }
-    
-    // =====================================================================
-//  แทนที่ฟังก์ชัน GetSafeRandomPosition() เดิมใน PlayerController.cs
-//  ด้วยโค้ดด้านล่างนี้ทั้งหมด
-// =====================================================================
 
     private Vector3 GetSafeRandomPosition()
     {
         PlayerSpawnZone spawnZone = FindObjectOfType<PlayerSpawnZone>();
-
         if (spawnZone != null)
         {
-           
             return spawnZone.GetSafeSpawnPosition();
         }
-
-      
-        Debug.LogWarning("[PlayerController] ไม่พบ PlayerSpawnZone! กรุณาเพิ่ม Object นี้เข้าไปในด่าน");
         return new Vector3(0f, 15f, 0f);
     }
 
@@ -245,25 +223,19 @@ public class PlayerController : NetworkBehaviour
             if (mainCamera == null) return; 
         }
         
-    
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-      
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (Mathf.Abs(scroll) > 0.01f) 
         {
-           
             cameraDistance -= scroll * zoomSpeed; 
-            
-            
             cameraDistance = Mathf.Clamp(cameraDistance, minCameraDistance, maxCameraDistance);
         }
 
         if (transform.position.y < fallDeathY && !isDead) 
         {
-           
             if (SceneManager.GetActiveScene().name == "WaitingScene")
             {
                 if (controller != null) controller.enabled = false;
@@ -274,7 +246,6 @@ public class PlayerController : NetworkBehaviour
             }
             else
             {
-                
                 isDead = true; 
                 FallDeathServerRpc(); 
                 return;
@@ -296,7 +267,6 @@ public class PlayerController : NetworkBehaviour
             return; 
         }
         
-        
         if (shieldTimer > 0) shieldTimer -= Time.deltaTime;
         if (dashTimer > 0) dashTimer -= Time.deltaTime;
         if (echoTimer > 0) echoTimer -= Time.deltaTime;
@@ -305,7 +275,6 @@ public class PlayerController : NetworkBehaviour
         if (bullChargeTimer > 0) bullChargeTimer -= Time.deltaTime;
         if (inkTimer > 0) inkTimer -= Time.deltaTime;
         
-       
         if (characterType == CharacterType.DogKnight)
         {
             if (Input.GetButtonDown("Fire2") && shieldTimer <= 0 && !isShieldActive.Value)
@@ -333,10 +302,8 @@ public class PlayerController : NetworkBehaviour
             case CharacterType.Octopus: HandleOctopusSkill(); break;
         }
         
-        
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
 
-        
         if (Input.GetKeyDown(KeyCode.F) && currentItem != null)
         {
             ConsumeItemServerRpc();
@@ -355,10 +322,8 @@ public class PlayerController : NetworkBehaviour
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
-
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
         }
-        
         
         if (controller.isGrounded && verticalVelocity < 0) 
         {
@@ -374,7 +339,6 @@ public class PlayerController : NetworkBehaviour
         }
         verticalVelocity += gravity * Time.deltaTime;
 
-       
         if (isBullCharging && characterType == CharacterType.Bull)
         {
             float step = bullChargeSpeed * Time.deltaTime;
@@ -389,7 +353,6 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-       
         float x = Input.GetAxis("Horizontal"); 
         float z = Input.GetAxis("Vertical");   
         Vector3 moveInput = new Vector3(x, 0f, z).normalized;
@@ -443,7 +406,6 @@ public class PlayerController : NetworkBehaviour
         if (IsOwner) AddImpact(force); 
     }
 
-  
     [ServerRpc]
     void ConsumeItemServerRpc()
     {
@@ -454,28 +416,23 @@ public class PlayerController : NetworkBehaviour
         
         ItemData d = item.itemData;
         
-       
         if (d.healAmount > 0f)
         {
             var health = GetComponent<PlayerHealth>();
             if (health != null) health.Heal(d.healAmount);
         }
 
-        
         if (d.damageBoostMultiplier > 1f)
         {
             ApplyDamageBoostServer(d.damageBoostMultiplier, d.damageBoostDuration);
         }
         
-        
         ApplyConsumableBuffClientRpc(d.speedBoostAmount, d.speedBoostDuration,
             d.throwBoostAmount, d.throwBoostDuration,
             new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } });
         
-       
         if (d.destroysHeldItem) DestroyCurrentItemServer();
 
-       
         currentItem.Despawn(true);
         ClearItemClientRpc();
     }
@@ -577,7 +534,7 @@ public class PlayerController : NetworkBehaviour
     void HandleFoxSkill()
     {
         if (decoyTimer > 0) return;
-        if (Input.GetKeyDown(KeyCode.E) && decoyPrefab != null && !isStunned)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && decoyPrefab != null && !isStunned) // เปลี่ยนปุ่มเป็น Left Shift แล้ว
         {
             decoyTimer = decoyCooldown;
             SpawnDecoyServerRpc(transform.position, transform.rotation);
@@ -587,12 +544,16 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     void SpawnDecoyServerRpc(Vector3 pos, Quaternion rot)
     {
+        // เสก Prefab ที่สร้างใหม่ (ไม่มี PlayerController)
         GameObject go = Instantiate(decoyPrefab, pos, rot);
         NetworkObject netObj = go.GetComponent<NetworkObject>();
         netObj.Spawn();
-    
-        DecoyController decoy = go.GetComponent<DecoyController>();
-        if (decoy != null) decoy.lifetime.Value = decoyDuration;
+        
+        // บังคับให้ท่าเดินทำงานตลอด
+        if (go.TryGetComponent(out Animator anim))
+        {
+            anim.SetFloat("Speed", 1.0f); 
+        }
     }
 
     // ==========================================
@@ -648,7 +609,7 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     void ClearChargeHitsServerRpc()
     {
-        hitDuringCharge.Clear();          // clear server's copy
+        hitDuringCharge.Clear();
     }
 
     [ServerRpc]
@@ -842,11 +803,9 @@ public class PlayerController : NetworkBehaviour
     private IEnumerator TrapSpeedBoostRoutine(float multiplier, float duration)
     {
         float originalSpeed = moveSpeed;
-        moveSpeed *= multiplier; // Multiply speed
-        
+        moveSpeed *= multiplier; 
         yield return new WaitForSeconds(duration);
-        
-        moveSpeed = originalSpeed; // Revert back
+        moveSpeed = originalSpeed; 
     }
 
     public void ApplyDamageBoostServer(float multiplier, float duration)
@@ -859,25 +818,69 @@ public class PlayerController : NetworkBehaviour
     {
         pickupDamageMultiplier = multiplier;
         yield return new WaitForSeconds(duration);
-        pickupDamageMultiplier = 1f; // Revert to standard 1x multiplier
+        pickupDamageMultiplier = 1f; 
     }
 
     public void DestroyCurrentItemServer()
     {
         if (!IsServer) return;
-        
         if (currentItem != null)
         {
             currentItem.Despawn(true);
             ClearItemClientRpc();
         }
     }
+
     public override void OnNetworkDespawn()
     {
-        if (IsOwner)
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
+        if (IsOwner) SceneManager.sceneLoaded -= OnSceneLoaded;
         base.OnNetworkDespawn();
+    }
+
+    // ==========================================
+    // UI COOLDOWN SYSTEM (เพิ่ม 3 ฟังก์ชันนี้เพื่อส่งค่าให้ UI)
+    // ==========================================
+
+    // 1. ส่งค่า % คูลดาวน์สำหรับทำหลอดวงกลมสีดำ
+    public float GetSkillCooldownPercentage()
+    {
+        switch (characterType)
+        {
+            case CharacterType.DogKnight: return shieldTimer > 0 ? shieldTimer / shieldCooldown : 0f;
+            case CharacterType.NekoCat:   return dashTimer > 0 ? dashTimer / dashCooldown : 0f;
+            case CharacterType.Bat:       return echoTimer > 0 ? echoTimer / echoCooldown : 0f;
+            case CharacterType.Fox:       return decoyTimer > 0 ? decoyTimer / decoyCooldown : 0f;
+            case CharacterType.Bear:      return rageTimer > 0 ? rageTimer / rageCooldown : 0f;
+            case CharacterType.Bull:      return bullChargeTimer > 0 ? bullChargeTimer / bullChargeCooldown : 0f;
+            case CharacterType.Octopus:   return inkTimer > 0 ? inkTimer / inkCooldown : 0f;
+            case CharacterType.Chicken:   return 0f; 
+            default: return 0f;
+        }
+    }
+
+    // 2. ส่งค่าเวลาที่เหลือเป็นวินาที (สำหรับโชว์ตัวเลข)
+    public float GetSkillCooldownTimeLeft()
+    {
+        switch (characterType)
+        {
+            case CharacterType.DogKnight: return shieldTimer > 0 ? shieldTimer : 0f;
+            case CharacterType.NekoCat:   return dashTimer > 0 ? dashTimer : 0f;
+            case CharacterType.Bat:       return echoTimer > 0 ? echoTimer : 0f;
+            case CharacterType.Fox:       return decoyTimer > 0 ? decoyTimer : 0f;
+            case CharacterType.Bear:      return rageTimer > 0 ? rageTimer : 0f;
+            case CharacterType.Bull:      return bullChargeTimer > 0 ? bullChargeTimer : 0f;
+            case CharacterType.Octopus:   return inkTimer > 0 ? inkTimer : 0f;
+            default: return 0f;
+        }
+    }
+
+    // 3. ส่งค่าจำนวนครั้งการกระโดด (สำหรับน้องไก่โดยเฉพาะ)
+    public int GetRemainingJumps()
+    {
+        if (controller != null && controller.isGrounded)
+        {
+            return maxJumps; // เหยียบพื้นอยู่ = กระโดดได้เต็มแม็กซ์
+        }
+        return jumpsRemaining;
     }
 }

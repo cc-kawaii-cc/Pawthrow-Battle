@@ -26,7 +26,8 @@ public class GameManager : NetworkBehaviour
         
         foreach (var hp in allPlayers)
         {
-            if (!hp.isDead && hp.TryGetComponent(out PlayerController pc))
+            // ไม่นับรวมร่างปลอม
+            if (!hp.isDead && !hp.isDecoy && hp.TryGetComponent(out PlayerController pc))
             {
                 aliveList.Add(pc);
             }
@@ -63,8 +64,8 @@ public class GameManager : NetworkBehaviour
             PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
             foreach (var hp in allPlayers)
             {
-                
-                if (hp != null && hp.IsSpawned)
+                // ไม่ต้องชุบชีวิตร่างปลอม
+                if (hp != null && hp.IsSpawned && !hp.isDecoy) 
                 {
                     hp.ReviveOnServer();
                 }
@@ -77,7 +78,6 @@ public class GameManager : NetworkBehaviour
                     item.GetComponent<NetworkObject>().Despawn(true);
                 }
             }
-            // ========================================================
 
             isGameOver = false;
             NetworkManager.Singleton.SceneManager.LoadScene("WaitingScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
