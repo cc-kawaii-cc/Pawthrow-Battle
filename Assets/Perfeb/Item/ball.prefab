@@ -13,9 +13,6 @@ GameObject:
   - component: {fileID: 8653755715379661072}
   - component: {fileID: 1001598927522167649}
   - component: {fileID: 4682586150119476429}
-  - component: {fileID: 8284073076589496414}
-  - component: {fileID: 6953801097595837176}
-  - component: {fileID: 2404012454648190106}
   m_Layer: 0
   m_Name: ball
   m_TagString: Untagged
@@ -35,7 +32,8 @@ Transform:
   m_LocalPosition: {x: 5, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3067883630467162342}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4647209005473653222
@@ -143,88 +141,69 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &8284073076589496414
-MonoBehaviour:
+--- !u!1001 &3010704756984489839
+PrefabInstance:
   m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8480207628663299142}
+    m_Modifications:
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.4257102
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.15180004
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.21384
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.000000021855694
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 581161450784480563, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: m_Name
+      value: Soccer
+      objectReference: {fileID: 0}
+    - target: {fileID: 8689547070497923243, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 2882869626
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+--- !u!4 &3067883630467162342 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 241896879881226121, guid: 2665ffca1c1472042905014c5ee19e87, type: 3}
+  m_PrefabInstance: {fileID: 3010704756984489839}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4197145092691596506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3824138576
-  InScenePlacedSourceGlobalObjectIdHash: 3824138576
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
---- !u!114 &6953801097595837176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4197145092691596506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkTransform
-  ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 0
-  AutoOwnerAuthorityTickOffset: 1
-  PositionInterpolationType: 0
-  RotationInterpolationType: 0
-  ScaleInterpolationType: 0
-  PositionLerpSmoothing: 1
-  PositionMaxInterpolationTime: 0.1
-  RotationLerpSmoothing: 1
-  RotationMaxInterpolationTime: 0.1
-  ScaleLerpSmoothing: 1
-  ScaleMaxInterpolationTime: 0.1
-  AuthorityMode: 0
-  TickSyncChildren: 0
-  UseUnreliableDeltas: 0
-  SyncPositionX: 1
-  SyncPositionY: 1
-  SyncPositionZ: 1
-  SyncRotAngleX: 1
-  SyncRotAngleY: 1
-  SyncRotAngleZ: 1
-  SyncScaleX: 1
-  SyncScaleY: 1
-  SyncScaleZ: 1
-  PositionThreshold: 0.001
-  RotAngleThreshold: 0.01
-  ScaleThreshold: 0.01
-  UseQuaternionSynchronization: 0
-  UseQuaternionCompression: 0
-  UseHalfFloatPrecision: 0
-  InLocalSpace: 0
-  SwitchTransformSpaceWhenParented: 0
-  Interpolate: 1
-  SlerpPosition: 0
---- !u!114 &2404012454648190106
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4197145092691596506}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27513694a4fe6614997d366912870dd6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ThrowableItem
-  ShowTopMostFoldoutHeaderGroup: 1
-  itemData: {fileID: 11400000, guid: 4310f5a85862a9343bb1e0a873aca5dc, type: 2}
