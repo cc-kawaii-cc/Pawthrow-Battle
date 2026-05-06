@@ -1670,7 +1670,7 @@ GameObject:
   - component: {fileID: 1337889670645598593}
   - component: {fileID: 5368445449100012926}
   m_Layer: 0
-  m_Name: DogPBR
+  m_Name: DOG
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
