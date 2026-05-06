@@ -1,114 +1,104 @@
 using Unity.Netcode;
 using UnityEngine;
-using Unity.Services.Analytics;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.Services.Analytics;
 
 public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance;
-    
+
     [Header("Game State")]
     private bool isGameOver = false;
-    
-    private Dictionary<string, int> itemUsageCount = new Dictionary<string, int>();
-    private Dictionary<string, float> itemTotalDamage = new Dictionary<string, float>();
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
-    public void RecordMatchStat(string itemName, float damage)
+
+    public void OnPlayerDied(ulong clientId)
     {
-        if (!IsServer) return; 
+        if (!IsServer) return;
+
+        List<PlayerController> aliveList = new List<PlayerController>();
+        PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
         
-        if (!itemUsageCount.ContainsKey(itemName))
+        foreach (var hp in allPlayers)
         {
-            itemUsageCount[itemName] = 0;
-            itemTotalDamage[itemName] = 0;
-        }
-        itemUsageCount[itemName]++;
-        itemTotalDamage[itemName] += damage;
-    }
-
-    public void OnPlayerDied(PlayerController deadPlayer)
-    {
-        if (!IsServer || isGameOver) return;
-
-        PlayerController[] allPlayersInMap = FindObjectsOfType<PlayerController>();
-        List<PlayerController> alivePlayers = new List<PlayerController>();
-        foreach (PlayerController p in allPlayersInMap)
-        {
-            if (p != deadPlayer && p.gameObject.activeInHierarchy)
+            if (!hp.isDead && hp.TryGetComponent(out PlayerController pc))
             {
-                PlayerHealth health = p.GetComponent<PlayerHealth>();
-                if (health != null && health.currentHealth.Value > 0)
-                {
-                    alivePlayers.Add(p);
-                }
+                aliveList.Add(pc);
             }
         }
 
-        if (alivePlayers.Count == 1)
+        if (aliveList.Count <= 1 && !isGameOver)
         {
             isGameOver = true;
-            PlayerController winner = alivePlayers[0];
-            string winnerCharType = winner.characterType.ToString();
-            string statsString = "MATCH STATS:\n";
-            if (itemUsageCount.Count == 0) statsString += "No items were used.\n";
-            foreach (var kvp in itemUsageCount)
-            {
-                statsString += $"- {kvp.Key}: Thrown {kvp.Value} times (Total Dmg: {itemTotalDamage[kvp.Key]:F0})\n";
-            }
             
-            DeclareWinnerClientRpc(winnerCharType, winner.NetworkObjectId, statsString);
-        }
-        else if (alivePlayers.Count == 0 && !isGameOver)
-        {
-            isGameOver = true;
-            Debug.Log("Draw! Everyone died.");
+            if (aliveList.Count == 1)
+            {
+                PlayerController winner = aliveList[0];
+                string winnerCharType = winner.characterType.ToString();
+                RecordGameWinAnalytics(winnerCharType);
+                DeclareWinnerClientRpc(winnerCharType, winner.OwnerClientId, "Survivor!");
+            }
+            else
+            {
+                DeclareWinnerClientRpc("Draw", 999, "Everyone died!");
+            }
+
+            StartCoroutine(RestartGameLoopRoutine());
         }
     }
 
-    [ClientRpc]
-    private void DeclareWinnerClientRpc(string winnerCharType, ulong winnerNetworkObjectId, string matchStats)
+    private IEnumerator RestartGameLoopRoutine()
     {
-        RecordGameWinAnalytics(winnerCharType);
+        if (LobbyManager.Instance != null) LobbyManager.Instance.UpdateLobbyStateToWaiting();
+        
+        yield return new WaitForSeconds(10f);
 
+        if (IsServer)
+        {
+            PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
+            foreach (var hp in allPlayers)
+            {
+                hp.ReviveOnServer();
+            }
+
+            isGameOver = false;
+            NetworkManager.Singleton.SceneManager.LoadScene("WaitingScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+    }
+    
+    [ClientRpc]
+    void DeclareWinnerClientRpc(string winnerCharType, ulong winnerId, string statsString)
+    {
         GameMenuUI menuUI = FindObjectOfType<GameMenuUI>();
         if (menuUI != null)
         {
-            menuUI.ShowGameWin(winnerCharType, matchStats);
-        }
-        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(winnerNetworkObjectId, out NetworkObject winnerObj))
-        {
-            Transform winnerTransform = winnerObj.transform;
-            Camera mainCam = Camera.main;
-            if (mainCam != null)
+            if (NetworkManager.Singleton.LocalClientId == winnerId)
             {
-                if (mainCam.TryGetComponent(out SpectatorCameraController spectator)) spectator.enabled = false;
-                
-                WinnerLockOnCamera lockOnCam = mainCam.GetComponent<WinnerLockOnCamera>();
-                if (lockOnCam == null) lockOnCam = mainCam.gameObject.AddComponent<WinnerLockOnCamera>();
-                
-                lockOnCam.SetTarget(winnerTransform);
+                string winnerName = winnerCharType == "Draw" ? "DRAW!" : $"You Win! ({winnerCharType})";
+                menuUI.ShowGameWin(winnerName, statsString);
             }
+            
+            menuUI.StartEndGameCountdown();
         }
     }
 
-    private void RecordGameWinAnalytics(string characterName)
+    private void RecordGameWinAnalytics(string winnerCharType)
     {
-        if (!IsServer) return; 
         if (AnalyticsManager.Instance != null && AnalyticsManager.Instance.disableAnalyticsForTesting) return;
-
-        try
-        {
-            CustomEvent winEvent = new CustomEvent("game_win")
-            {
-                { "character_name", characterName }
-            };
-            AnalyticsService.Instance.RecordEvent(winEvent);
-            AnalyticsService.Instance.Flush();
-        }
-        catch (System.Exception e) { Debug.LogWarning("Analytics Error: " + e.Message); }
+        try { AnalyticsService.Instance.RecordEvent(new CustomEvent("game_win") { { "winning_character", winnerCharType } }); AnalyticsService.Instance.Flush(); } catch { }
     }
+
+    public void RecordEliminationStat(string playerId)
+    {
+        if (!IsServer) return;
+        if (AnalyticsManager.Instance?.disableAnalyticsForTesting == true) return;
+        try { AnalyticsService.Instance.RecordEvent(new CustomEvent("player_eliminated") { { "client_id", playerId } }); AnalyticsService.Instance.Flush(); } catch { }
+    }
+
+    public void RecordMatchStat(string itemName, float totalDamage) { }
 }

@@ -29,15 +29,6 @@ public class AnalyticsManager : MonoBehaviour
             return; 
         }
 
-        try
-        {
-            await UnityServices.InitializeAsync();
-            AnalyticsService.Instance.StartDataCollection();
-            Debug.Log("Unity Analytics Initialized Successfully!");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Failed to initialize Unity Analytics: " + e.Message);
-        }
+        
     }
 }

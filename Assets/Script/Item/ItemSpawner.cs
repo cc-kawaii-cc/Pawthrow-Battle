@@ -12,11 +12,14 @@ public class ItemSpawner : NetworkBehaviour
     public Vector2 spawnAreaSize = new Vector2(20f, 20f);
     public float spawnHeight = 5f;
 
+    [Header("Spawn Limit")]
+    public int maxItemsOnMap = 20;
+
     private float timer;
 
     void Update()
     {
-        if (!IsServer) return;
+        if (!IsSpawned || !IsServer || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return;
 
         timer += Time.deltaTime;
         if (timer >= spawnInterval)
@@ -29,6 +32,9 @@ public class ItemSpawner : NetworkBehaviour
     void SpawnItem()
     {
         if (itemPrefabs.Length == 0) return;
+
+        int currentCount = FindObjectsOfType<ThrowableItem>().Length;
+        if (currentCount >= maxItemsOnMap) return;
 
         int randomItem = Random.Range(0, itemPrefabs.Length);
         float randomX = spawnCenter.x + Random.Range(-spawnAreaSize.x / 2f, spawnAreaSize.x / 2f);
@@ -45,6 +51,7 @@ public class ItemSpawner : NetworkBehaviour
             Destroy(spawnedItem);
         }
     }
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = new Color(0, 1, 0, 0.5f);

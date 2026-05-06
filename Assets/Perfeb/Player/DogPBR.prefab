@@ -1568,7 +1568,7 @@ GameObject:
   - component: {fileID: 1337889670645598593}
   m_Layer: 0
   m_Name: DogPBR
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1684,20 +1684,49 @@ MonoBehaviour:
   shieldVisual: {fileID: 8845912188884468465}
   dashForce: 20
   dashCooldown: 3
+  maxJumps: 2
+  jumpParticle: {fileID: 0}
+  echoRadius: 20
+  echoDuration: 3
+  echoCooldown: 8
+  decoyPrefab: {fileID: 0}
+  decoyDuration: 4
+  decoyCooldown: 10
+  rageThrowMultiplier: 2
+  rageDuration: 5
+  rageCooldown: 12
+  isRaging: 0
+  rageVFX: {fileID: 0}
+  bullChargeSpeed: 22
+  bullChargeDistance: 12
+  bullChargeDamage: 30
+  bullChargeKnockback: 25
+  bullChargeCooldown: 8
+  bullChargeVFX: {fileID: 0}
+  inkRadius: 8
+  inkBlindDuration: 3
+  inkCooldown: 10
+  inkVFXPrefab: {fileID: 0}
   moveSpeed: 5
   rotationSpeed: 700
   jumpForce: 5
   gravity: -9.81
   animator: {fileID: 0}
   cameraDistance: 5
+  minCameraDistance: 1.5
+  maxCameraDistance: 12
+  zoomSpeed: 5
   mouseSensitivity: 3
-  minPitch: -20
-  maxPitch: 60
+  minPitch: -89
+  maxPitch: 89
   targetOffset: {x: 0, y: 1.5, z: 0}
   handPoint: {fileID: 1418516356672838363}
   pickupRange: 2
   throwForce: 15
   maxChargeTime: 2
+  currentCharge: 0
+  isCharging: 0
+  currentItem: {fileID: 0}
   fallDeathY: -15
 --- !u!114 &3584425320675687050
 MonoBehaviour:
@@ -1758,8 +1787,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   ShowTopMostFoldoutHeaderGroup: 1
+  maxHealth: 100
   currentHealth:
     m_InternalValue: 100
+  isDead: 0
 --- !u!1 &8422892626600285394
 GameObject:
   m_ObjectHideFlags: 0
