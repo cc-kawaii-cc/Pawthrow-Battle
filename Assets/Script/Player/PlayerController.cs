@@ -197,52 +197,24 @@ public class PlayerController : NetworkBehaviour
         if (controller != null) controller.enabled = true;
     }
     
+    // =====================================================================
+//  แทนที่ฟังก์ชัน GetSafeRandomPosition() เดิมใน PlayerController.cs
+//  ด้วยโค้ดด้านล่างนี้ทั้งหมด
+// =====================================================================
+
     private Vector3 GetSafeRandomPosition()
     {
         PlayerSpawnZone spawnZone = FindObjectOfType<PlayerSpawnZone>();
-        Vector3 center = Vector3.zero;
-        Vector2 areaSize = new Vector2(20f, 20f);
 
         if (spawnZone != null)
         {
-            center = spawnZone.transform.position;
-            areaSize = spawnZone.spawnAreaSize;
-        }
-        else
-        {
-            Debug.LogWarning("เตือน: ด่านนี้ยังไม่มี PlayerSpawnZone! ระบบจะสุ่มเกิดตรงกลาง (0,0,0) แทน");
+            // มอบหมายงานให้ PlayerSpawnZone จัดการทั้งหมด
+            return spawnZone.GetSafeSpawnPosition();
         }
 
-        int maxAttempts = 30; 
-        float playerRadius = 1f; 
-
-        for (int i = 0; i < maxAttempts; i++)
-        {
-            float randomX = Random.Range(-areaSize.x / 2, areaSize.x / 2);
-            float randomZ = Random.Range(-areaSize.y / 2, areaSize.y / 2);
-            
-            Vector3 skyPos = center + new Vector3(randomX, 15f, randomZ);
-
-            if (Physics.Raycast(skyPos, Vector3.down, out RaycastHit hit, 50f))
-            {
-                Vector3 checkPos = hit.point + new Vector3(0, playerRadius + 0.1f, 0);
-                Collider[] hitColliders = Physics.OverlapSphere(checkPos, playerRadius);
-                bool isStuck = false;
-
-                foreach(var col in hitColliders)
-                {
-                    if (!col.CompareTag("Ground") && !col.name.Contains("Terrain") && !col.name.Contains("Plane"))
-                    {
-                        isStuck = true;
-                        break; 
-                    }
-                }
-
-                if (!isStuck) return skyPos; 
-            }
-        }
-
-        return center + new Vector3(0, 15f, 0);
+        // Fallback ถ้าไม่มี SpawnZone ในด่าน
+        Debug.LogWarning("[PlayerController] ไม่พบ PlayerSpawnZone! กรุณาเพิ่ม Object นี้เข้าไปในด่าน");
+        return new Vector3(0f, 15f, 0f);
     }
 
     void Update() 
