@@ -4594,13 +4594,6 @@ RectTransform:
   - {fileID: 492671259}
   - {fileID: 1068803541}
   - {fileID: 1247841062}
-  - {fileID: 95263903}
-  - {fileID: 1854924226}
-  - {fileID: 467612919}
-  - {fileID: 217018537}
-  - {fileID: 2097186170}
-  - {fileID: 318517969}
-  - {fileID: 342859594}
   - {fileID: 543616082}
   - {fileID: 719404350}
   - {fileID: 416319664}
@@ -4608,6 +4601,13 @@ RectTransform:
   - {fileID: 1222116918}
   - {fileID: 1418590414}
   - {fileID: 927638070}
+  - {fileID: 95263903}
+  - {fileID: 1854924226}
+  - {fileID: 467612919}
+  - {fileID: 217018537}
+  - {fileID: 2097186170}
+  - {fileID: 318517969}
+  - {fileID: 342859594}
   - {fileID: 400822557}
   - {fileID: 1973298922}
   m_Father: {fileID: 0}

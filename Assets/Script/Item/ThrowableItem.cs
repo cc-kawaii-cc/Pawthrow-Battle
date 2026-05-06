@@ -17,6 +17,17 @@ public class ThrowableItem : NetworkBehaviour
         rb = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
     }
+    void Update()
+        {
+           
+            if (IsServer && transform.position.y < -50f)
+            {
+                if (IsSpawned)
+                {
+                    GetComponent<NetworkObject>().Despawn(true);
+                }
+            }
+        }
 
     public void Grab(Transform playerRoot, Transform handPoint) 
     {

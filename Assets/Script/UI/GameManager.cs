@@ -63,12 +63,21 @@ public class GameManager : NetworkBehaviour
             PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
             foreach (var hp in allPlayers)
             {
-                // [แก้ไข] เช็คก่อนว่าตัวละครนี้ยังออนไลน์อยู่ (IsSpawned) ป้องกันบั๊กคนออกเกมก่อนเวลา!
+                
                 if (hp != null && hp.IsSpawned)
                 {
                     hp.ReviveOnServer();
                 }
             }
+            ThrowableItem[] allItems = FindObjectsOfType<ThrowableItem>();
+            foreach (var item in allItems)
+            {
+                if (item != null && item.IsSpawned)
+                {
+                    item.GetComponent<NetworkObject>().Despawn(true);
+                }
+            }
+            // ========================================================
 
             isGameOver = false;
             NetworkManager.Singleton.SceneManager.LoadScene("WaitingScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
