@@ -26,13 +26,21 @@ public class GameMenuUI : MonoBehaviour
 
     public void LeaveGame()
     {
-     
-        if (NetworkManager.Singleton != null) 
+        // [แก้ไข] ให้เรียกใช้ระบบ LeaveLobbyGracefully ที่เราทำไว้ ซึ่งมันจะลบห้อง Cloud ให้ด้วย
+        if (LobbyManager.Instance != null)
         {
-            NetworkManager.Singleton.Shutdown();
-            Destroy(NetworkManager.Singleton.gameObject); // ลบตัวเก่าทิ้งเพื่อกันบั๊กตอนเล่นใหม่
+            LobbyManager.Instance.LeaveLobbyGracefully();
         }
-        SceneManager.LoadScene("MainMenu"); 
+        else
+        {
+            // Fallback (กันเหนียว เผื่อหา LobbyManager ไม่เจอ)
+            if (NetworkManager.Singleton != null) 
+            {
+                NetworkManager.Singleton.Shutdown();
+                Destroy(NetworkManager.Singleton.gameObject); 
+            }
+            SceneManager.LoadScene("MainMenu"); 
+        }
     }
 
  
@@ -93,6 +101,12 @@ public class GameMenuUI : MonoBehaviour
             }
             yield return new WaitForSeconds(1f);
             time--;
+        }
+        
+        // [เพิ่มใหม่] พอเวลาเหลือ 0 ให้เปลี่ยนตัวหนังสือเป็น Loading... จะได้รู้ว่าเกมกำลังโหลด ไม่ได้ค้าง
+        if (countdownText != null) 
+        {
+            countdownText.text = "Loading...";
         }
     }
     void Update()

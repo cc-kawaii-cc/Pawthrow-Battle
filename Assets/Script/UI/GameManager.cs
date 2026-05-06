@@ -63,7 +63,11 @@ public class GameManager : NetworkBehaviour
             PlayerHealth[] allPlayers = FindObjectsOfType<PlayerHealth>();
             foreach (var hp in allPlayers)
             {
-                hp.ReviveOnServer();
+                // [แก้ไข] เช็คก่อนว่าตัวละครนี้ยังออนไลน์อยู่ (IsSpawned) ป้องกันบั๊กคนออกเกมก่อนเวลา!
+                if (hp != null && hp.IsSpawned)
+                {
+                    hp.ReviveOnServer();
+                }
             }
 
             isGameOver = false;

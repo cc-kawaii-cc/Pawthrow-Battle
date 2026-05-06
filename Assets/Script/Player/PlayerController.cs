@@ -78,16 +78,15 @@ public class PlayerController : NetworkBehaviour
     [Header("Camera Settings")]
     public float cameraDistance = 5f;
     
-    // --- เพิ่มตั้งค่าการซูม ---
-    public float minCameraDistance = 1.5f; // ระยะซูมเข้าใกล้สุด (ติดตัว)
-    public float maxCameraDistance = 12f;  // ระยะซูมออกไกลสุด (เห็นวิวกว้าง)
-    public float zoomSpeed = 5f;           // ความเร็วตอนไถลูกกลิ้งเมาส์
+    
+    public float minCameraDistance = 1.5f; 
+    public float maxCameraDistance = 12f;  
+    public float zoomSpeed = 5f;           
     
     public float mouseSensitivity = 3f;
     
-    // --- ปรับให้ก้มเงยได้อิสระสุดๆ (อย่าตั้ง 90 เป๊ะ เดี๋ยวกล้องพับ) ---
-    public float minPitch = -89f; // เงยหน้ามองฟ้าได้สุด
-    public float maxPitch = 89f;  // ก้มมองพื้นได้สุด
+    public float minPitch = -89f; 
+    public float maxPitch = 89f; 
     
     public Vector3 targetOffset = new Vector3(0, 1.5f, 0);
     
@@ -158,16 +157,17 @@ public class PlayerController : NetworkBehaviour
         verticalVelocity = 0f;
         impact = Vector3.zero;
         if (controller != null) controller.enabled = true;
+        
+        if (IsOwner)
+        {
+            RequestResetStatsServerRpc();
+        }
 
         if (sceneName == "CITY")
         {
+            
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-            
-            if (Camera.main != null && Camera.main.TryGetComponent(out SpectatorCameraController spec))
-            {
-                spec.enabled = false;
-            }
 
             if (IsOwner) StartCoroutine(SpawnRandomlyAndDropCoroutine());
         }
@@ -183,6 +183,13 @@ public class PlayerController : NetworkBehaviour
                 if (controller != null) controller.enabled = true;
             }
         }
+    }
+    [ServerRpc]
+    private void RequestResetStatsServerRpc()
+    {
+        // Server เป็นคนจัดการเลือดและทำลายไอเทมให้ Client อย่างถูกต้อง
+        if (TryGetComponent(out PlayerHealth hp)) hp.currentHealth.Value = hp.maxHealth;
+        DestroyCurrentItemServer();
     }
 
     private IEnumerator SpawnRandomlyAndDropCoroutine()
@@ -208,11 +215,11 @@ public class PlayerController : NetworkBehaviour
 
         if (spawnZone != null)
         {
-            // มอบหมายงานให้ PlayerSpawnZone จัดการทั้งหมด
+           
             return spawnZone.GetSafeSpawnPosition();
         }
 
-        // Fallback ถ้าไม่มี SpawnZone ในด่าน
+      
         Debug.LogWarning("[PlayerController] ไม่พบ PlayerSpawnZone! กรุณาเพิ่ม Object นี้เข้าไปในด่าน");
         return new Vector3(0f, 15f, 0f);
     }
@@ -238,27 +245,40 @@ public class PlayerController : NetworkBehaviour
             if (mainCamera == null) return; 
         }
         
-        // โค้ดเดิมที่คุณมีอยู่แล้ว
+    
         yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouseSensitivity;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-        // --- เพิ่มโค้ดระบบซูมเข้า-ออก ด้วย Scroll Mouse ตรงนี้ ---
+      
         float scroll = Input.GetAxis("Mouse ScrollWheel");
-        if (Mathf.Abs(scroll) > 0.01f) // ถ้ามีการไถลูกกลิ้งเมาส์
+        if (Mathf.Abs(scroll) > 0.01f) 
         {
-            // ลบด้วยค่า scroll เพราะปกติไถขึ้น (ค่าบวก) เราอยากให้กล้องซูมเข้า (ระยะลดลง)
+           
             cameraDistance -= scroll * zoomSpeed; 
             
-            // ล็อกระยะกล้องไม่ให้มุดเข้าตัว หรือถอยไกลเกินไป
+            
             cameraDistance = Mathf.Clamp(cameraDistance, minCameraDistance, maxCameraDistance);
         }
 
         if (transform.position.y < fallDeathY && !isDead) 
         {
-            isDead = true; 
-            FallDeathServerRpc(); 
-            return;
+           
+            if (SceneManager.GetActiveScene().name == "WaitingScene")
+            {
+                if (controller != null) controller.enabled = false;
+                transform.position = new Vector3(0, 15f, 0);
+                verticalVelocity = 0f;
+                if (controller != null) controller.enabled = true;
+                return;
+            }
+            else
+            {
+                
+                isDead = true; 
+                FallDeathServerRpc(); 
+                return;
+            }
         }
 
         if (impact.magnitude > 0.2f) 
@@ -276,7 +296,7 @@ public class PlayerController : NetworkBehaviour
             return; 
         }
         
-        // Cooldown Timers
+        
         if (shieldTimer > 0) shieldTimer -= Time.deltaTime;
         if (dashTimer > 0) dashTimer -= Time.deltaTime;
         if (echoTimer > 0) echoTimer -= Time.deltaTime;
@@ -285,7 +305,7 @@ public class PlayerController : NetworkBehaviour
         if (bullChargeTimer > 0) bullChargeTimer -= Time.deltaTime;
         if (inkTimer > 0) inkTimer -= Time.deltaTime;
         
-        // Skills Dispatch
+       
         if (characterType == CharacterType.DogKnight)
         {
             if (Input.GetButtonDown("Fire2") && shieldTimer <= 0 && !isShieldActive.Value)
@@ -313,10 +333,10 @@ public class PlayerController : NetworkBehaviour
             case CharacterType.Octopus: HandleOctopusSkill(); break;
         }
         
-        // Pick & Throw Logic
+        
         if (Input.GetKeyDown(KeyCode.E) && currentItem == null) TryPickupItem();
 
-        // 🍔 Consume Item Logic
+        
         if (Input.GetKeyDown(KeyCode.F) && currentItem != null)
         {
             ConsumeItemServerRpc();
@@ -339,7 +359,7 @@ public class PlayerController : NetworkBehaviour
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
         }
         
-        // Jump & Gravity Logic
+        
         if (controller.isGrounded && verticalVelocity < 0) 
         {
             verticalVelocity = -2f;
@@ -354,7 +374,7 @@ public class PlayerController : NetworkBehaviour
         }
         verticalVelocity += gravity * Time.deltaTime;
 
-        // BULL CHARGE MOVEMENT
+       
         if (isBullCharging && characterType == CharacterType.Bull)
         {
             float step = bullChargeSpeed * Time.deltaTime;
@@ -369,7 +389,7 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        // NORMAL MOVEMENT
+       
         float x = Input.GetAxis("Horizontal"); 
         float z = Input.GetAxis("Vertical");   
         Vector3 moveInput = new Vector3(x, 0f, z).normalized;
@@ -423,9 +443,7 @@ public class PlayerController : NetworkBehaviour
         if (IsOwner) AddImpact(force); 
     }
 
-    // ==========================================
-    // 🍔 CONSUMABLE SKILLS
-    // ==========================================
+  
     [ServerRpc]
     void ConsumeItemServerRpc()
     {
@@ -436,28 +454,28 @@ public class PlayerController : NetworkBehaviour
         
         ItemData d = item.itemData;
         
-        // Heal
+       
         if (d.healAmount > 0f)
         {
             var health = GetComponent<PlayerHealth>();
             if (health != null) health.Heal(d.healAmount);
         }
 
-        // Apply Damage Boost (Server Side)
+        
         if (d.damageBoostMultiplier > 1f)
         {
             ApplyDamageBoostServer(d.damageBoostMultiplier, d.damageBoostDuration);
         }
         
-        // Buff: Send ClientRpc to Owner for speed/throw adjustments
+        
         ApplyConsumableBuffClientRpc(d.speedBoostAmount, d.speedBoostDuration,
             d.throwBoostAmount, d.throwBoostDuration,
             new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } });
         
-        // Destroy Item effect from consuming (if it's a cursed/penalty consumable)
+       
         if (d.destroysHeldItem) DestroyCurrentItemServer();
 
-        // Despawn the consumed item
+       
         currentItem.Despawn(true);
         ClearItemClientRpc();
     }

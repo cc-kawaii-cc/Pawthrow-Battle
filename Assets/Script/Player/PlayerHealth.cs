@@ -38,6 +38,12 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (!IsServer || isDead) return false;
 
+        // [เพิ่มใหม่] ถ้าอยู่ห้องรอ (WaitingScene) ปาของใส่กันได้ กระเด็นได้ แต่ "เลือดไม่ลด" เด็ดขาด
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "WaitingScene")
+        {
+            amount = 0f; 
+        }
+
         currentHealth.Value -= amount;
 
         if (knockback > 0f && direction != Vector3.zero)
@@ -93,12 +99,12 @@ public class PlayerHealth : NetworkBehaviour
     }
     public void ReviveOnServer()
     {
-        if (!IsServer) return;
+        
+        if (!IsServer || !IsSpawned) return;
         
         isDead = false;
-        currentHealth.Value = maxHealth; // คืนเลือดเต็มหลอด
+        currentHealth.Value = maxHealth; 
         
-        // สั่งให้ทุกเครื่อง (ทั้งหัวห้องและลูกห้อง) ยกเลิกการซ่อนตัว
         ReviveClientRpc(); 
     }
 
@@ -107,7 +113,6 @@ public class PlayerHealth : NetworkBehaviour
     {
         isDead = false;
         
-        // เปิดโมเดล กล่องชน และหลอดเลือดให้กลับมามองเห็นได้อีกครั้งในทุกหน้าจอ!
         if (TryGetComponent(out CharacterController cc)) cc.enabled = true;
         foreach (var r in GetComponentsInChildren<Renderer>()) r.enabled = true;
         foreach (var c in GetComponentsInChildren<Collider>()) c.enabled = true;

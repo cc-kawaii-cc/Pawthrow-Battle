@@ -17,6 +17,7 @@ public class PlayerNameTag : NetworkBehaviour
         NetworkVariableWritePermission.Server);
 
     private PlayerHealth playerHealth;
+
     public override void OnNetworkSpawn()
     {
         if (IsOwner)
@@ -26,14 +27,11 @@ public class PlayerNameTag : NetworkBehaviour
                 : "Player";
                 
             SetNameServerRpc(playerName);
-            if (canvasRoot != null)
-            {
-                canvasRoot.SetActive(false);
-            }
         }
         
         syncedName.OnValueChanged += OnNameChanged;
         if (nameText != null) nameText.text = syncedName.Value.ToString();
+        
         playerHealth = GetComponent<PlayerHealth>();
         if (playerHealth != null)
         {
@@ -43,56 +41,50 @@ public class PlayerNameTag : NetworkBehaviour
     }
     
     [ServerRpc]
-    private void SetNameServerRpc(FixedString64Bytes name)
-    {
-        syncedName.Value = name;
-    }
+    private void SetNameServerRpc(FixedString64Bytes name) { syncedName.Value = name; }
     
     private void OnNameChanged(FixedString64Bytes prev, FixedString64Bytes next)
     {
-        if (nameText != null)
-        {
-            nameText.text = next.ToString();
-        }
+        if (nameText != null) nameText.text = next.ToString();
     }
     
     private void OnHPChanged(float prev, float next)
     {
         if (hpBar == null) return;
-
         hpBar.fillAmount = next / 100f;
-
-        if (next > 60f)
-            hpBar.color = Color.green;
-        else if (next > 30f)
-            hpBar.color = Color.yellow;
-        else
-            hpBar.color = Color.red;
+        if (next > 60f) hpBar.color = Color.green;
+        else if (next > 30f) hpBar.color = Color.yellow;
+        else hpBar.color = Color.red;
     }
+
+  
+    public string GetPlayerName() => syncedName.Value.ToString();
     
     private void LateUpdate()
     {
-        if (Camera.main != null && canvasRoot != null && canvasRoot.activeSelf)
+        
+        if (IsOwner) 
         {
-            canvasTransform.LookAt(canvasTransform.position + Camera.main.transform.rotation * Vector3.forward, 
-                                   Camera.main.transform.rotation * Vector3.up);
+            if (canvasRoot != null && canvasRoot.activeSelf) canvasRoot.SetActive(false);
+            return;
+        }
+
+       
+        if (Camera.main != null && canvasRoot != null)
+        {
+            if (!canvasRoot.activeSelf) canvasRoot.SetActive(true);
+            canvasTransform.LookAt(canvasTransform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
         }
     }
     
     public override void OnNetworkDespawn()
     {
         syncedName.OnValueChanged -= OnNameChanged;
-        if (playerHealth != null)
-        {
-            playerHealth.currentHealth.OnValueChanged -= OnHPChanged;
-        }
+        if (playerHealth != null) playerHealth.currentHealth.OnValueChanged -= OnHPChanged;
     }
 
     private void OnDestroy()
     {
-        if (playerHealth != null)
-        {
-            playerHealth.currentHealth.OnValueChanged -= OnHPChanged;
-        }
+        if (playerHealth != null) playerHealth.currentHealth.OnValueChanged -= OnHPChanged;
     }
 }
