@@ -2,12 +2,10 @@ using Unity.Netcode;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using Unity.Services.Lobbies.Models;
 
 public class WaitingRoomUI : MonoBehaviour
 {
-    [Header("UI Elements")]
-    public TextMeshProUGUI roomInfoText;
+    [Header("UI Elements")] public TextMeshProUGUI roomInfoText;
     public TextMeshProUGUI playerListText;
     public Button startGameButton;
 
@@ -16,17 +14,17 @@ public class WaitingRoomUI : MonoBehaviour
         if (NetworkManager.Singleton.IsServer)
         {
             startGameButton.gameObject.SetActive(true);
-            startGameButton.onClick.AddListener(() => 
+            startGameButton.onClick.AddListener(() =>
             {
-                gameObject.SetActive(false); 
-                
-                // อัปเดตสถานะห้องว่ากำลังเล่นอยู่ คนอื่นจะได้เข้าไม่ได้
+                gameObject.SetActive(false);
+
                 if (LobbyManager.Instance != null)
                 {
                     LobbyManager.Instance.UpdateLobbyStateToPlaying();
                 }
 
-                NetworkManager.Singleton.SceneManager.LoadScene("CITY", UnityEngine.SceneManagement.LoadSceneMode.Single);
+                NetworkManager.Singleton.SceneManager.LoadScene("CITY",
+                    UnityEngine.SceneManagement.LoadSceneMode.Single);
             });
         }
         else
@@ -39,25 +37,31 @@ public class WaitingRoomUI : MonoBehaviour
     {
         if (LobbyManager.Instance != null && LobbyManager.Instance.GetCurrentLobby() != null)
         {
-            Lobby currentLobby = LobbyManager.Instance.GetCurrentLobby();
-            
-            roomInfoText.text = $"Room Code: {currentLobby.LobbyCode}\nPlayer: {currentLobby.Players.Count} / {currentLobby.MaxPlayers}";
+            var currentLobby = LobbyManager.Instance.GetCurrentLobby();
+
+            // [แก้ไข] เปลี่ยนมานับ PlayerController แทน จะได้นับคนครบทุกคนแม้จะไม่ได้ใส่ป้ายชื่อ
+            PlayerController[] allPlayersInGame = FindObjectsOfType<PlayerController>();
+
+            roomInfoText.text =
+                $"Room Code: {currentLobby.LobbyCode}\nPlayer: {allPlayersInGame.Length} / {currentLobby.MaxPlayers}";
 
             string playersInfo = "Player List:\n";
-            foreach (Player player in currentLobby.Players)
+            foreach (var p in allPlayersInGame)
             {
-                if (player.Data != null && player.Data.ContainsKey("PlayerName"))
+                string pName = "Connecting...";
+
+                // พยายามดึงชื่อจาก NameTag ถ้ามี
+                if (p.TryGetComponent(out PlayerNameTag tag) && !string.IsNullOrEmpty(tag.GetPlayerName()))
                 {
-                    playersInfo += $"- {player.Data["PlayerName"].Value}\n";
+                    pName = tag.GetPlayerName();
                 }
-                else
-                {
-                    playersInfo += "- Player (Connecting)\n";
-                }
+
+                playersInfo += $"- {pName}\n";
             }
+
             playerListText.text = playersInfo;
         }
-        
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Cursor.lockState = CursorLockMode.None;

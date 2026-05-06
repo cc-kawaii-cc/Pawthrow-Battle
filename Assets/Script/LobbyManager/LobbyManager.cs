@@ -19,6 +19,24 @@ public class LobbyManager : MonoBehaviour
     public string waitingRoomSceneName = "WaitingScene";
     private Lobby currentLobby;
     public string PlayerName { get; private set; }
+    private void Start()
+    {
+      
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        }
+    }
+    
+    private void OnClientDisconnected(ulong clientId)
+    {
+        
+        if (!NetworkManager.Singleton.IsServer && clientId == 0)
+        {
+            Debug.Log("หัวห้องออกจากเกม! เซิร์ฟเวอร์ปิดตัวลง กำลังพากลับเมนูหลัก...");
+            LeaveLobbyGracefully();
+        }
+    }
 
     private void Awake()
     {
@@ -249,6 +267,66 @@ public class LobbyManager : MonoBehaviour
                 }
             }
         }
+    }
+   
+    
+    public async void LeaveLobby()
+    {
+        if (currentLobby != null)
+        {
+            try
+            {
+                if (currentLobby.HostId == AuthenticationService.Instance.PlayerId)
+                {
+                    
+                    await LobbyService.Instance.DeleteLobbyAsync(currentLobby.Id);
+                }
+                else
+                {
+                   
+                    await LobbyService.Instance.RemovePlayerAsync(currentLobby.Id, AuthenticationService.Instance.PlayerId);
+                }
+            }
+            catch (LobbyServiceException e)
+            {
+                Debug.LogWarning("Error leaving lobby (อาจจะห้องโดนลบไปแล้ว): " + e.Message);
+            }
+            
+            currentLobby = null;
+        }
+    }
+
+   
+    public void LeaveLobbyGracefully()
+    {
+    
+        LeaveLobby(); 
+
+       
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.Shutdown();
+            Destroy(NetworkManager.Singleton.gameObject);
+        }
+        
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        
+      
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    }
+    
+    
+
+    private void OnDestroy()
+    {
+        
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
+        
+       
     }
 
     public Lobby GetCurrentLobby() => currentLobby;
