@@ -1653,6 +1653,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &98095422
 MonoBehaviour:
@@ -2934,6 +2935,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &156793730
 MonoBehaviour:
@@ -3359,6 +3361,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &168101236
 MonoBehaviour:
@@ -4032,6 +4035,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &190370337
 MonoBehaviour:
@@ -4453,6 +4457,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &225321820
 MonoBehaviour:
@@ -4532,6 +4537,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &231574625
 MonoBehaviour:
@@ -5001,6 +5007,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &252360698
 MonoBehaviour:
@@ -5564,6 +5571,7 @@ MonoBehaviour:
     - {fileID: 190370336}
     - {fileID: 1980481596}
     - {fileID: 1924988557}
+    - {fileID: 315324783}
     - {fileID: 168101235}
     - {fileID: 699441604}
     warningBeforeWave: 10
@@ -6496,6 +6504,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &315324784
 MonoBehaviour:
@@ -7842,6 +7851,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &377668136
 MonoBehaviour:
@@ -10539,6 +10549,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &532278335
 MonoBehaviour:
@@ -11059,6 +11070,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &544341958
 MonoBehaviour:
@@ -11525,6 +11537,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &554726401
 Transform:
@@ -11930,6 +11943,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &566389711
 MonoBehaviour:
@@ -12666,6 +12680,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &619612803
 MonoBehaviour:
@@ -13273,6 +13288,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &631596915
 Transform:
@@ -14109,6 +14125,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &699441605
 MonoBehaviour:
@@ -14798,6 +14815,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &735533939
 MonoBehaviour:
@@ -14884,6 +14902,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &738624469
 MonoBehaviour:
@@ -16107,6 +16126,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!1 &829339518
 GameObject:
@@ -19081,6 +19101,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &989724439
 MonoBehaviour:
@@ -19587,6 +19608,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1062685446
 MonoBehaviour:
@@ -19673,6 +19695,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1066317640
 Transform:
@@ -20152,6 +20175,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1087798763
 MonoBehaviour:
@@ -20879,6 +20903,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1124850923
 MonoBehaviour:
@@ -21263,6 +21288,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1160668516
 Transform:
@@ -23386,6 +23412,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1226096312
 MonoBehaviour:
@@ -23757,6 +23784,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1246565309
 MonoBehaviour:
@@ -24650,6 +24678,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1275759311
 MonoBehaviour:
@@ -25080,6 +25109,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1298384469
 Transform:
@@ -26209,6 +26239,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1348220753
 MonoBehaviour:
@@ -26383,6 +26414,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1356968490
 MonoBehaviour:
@@ -26851,6 +26883,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1371128188
 MonoBehaviour:
@@ -27372,6 +27405,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!1 &1390517705
 GameObject:
@@ -28328,6 +28362,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1424978882
 MonoBehaviour:
@@ -29240,6 +29275,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1479741559
 MonoBehaviour:
@@ -29996,6 +30032,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1538009227
 MonoBehaviour:
@@ -31247,6 +31284,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1587214744
 MonoBehaviour:
@@ -33526,6 +33564,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1702159237
 Transform:
@@ -34574,6 +34613,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1735459485
 MonoBehaviour:
@@ -34765,6 +34805,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!1 &1750111887
 GameObject:
@@ -34857,6 +34898,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1753661655
 Transform:
@@ -36287,6 +36329,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1805562164
 MonoBehaviour:
@@ -37023,6 +37066,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1844187940
 MonoBehaviour:
@@ -38473,6 +38517,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1924988558
 MonoBehaviour:
@@ -39410,6 +39455,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1974391994
 Transform:
@@ -39486,6 +39532,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &1980481597
 MonoBehaviour:
@@ -39659,6 +39706,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &1986456171
 Transform:
@@ -40543,6 +40591,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!4 &2041095956
 Transform:
@@ -40855,6 +40904,7 @@ MonoBehaviour:
   flashSpeed: 4
   fallSpeed: 8
   destroyAfterFallDistance: 30
+  deactivateDelay: 0.5
   dangerZoneIndicator: {fileID: 0}
 --- !u!114 &2049066443
 MonoBehaviour:

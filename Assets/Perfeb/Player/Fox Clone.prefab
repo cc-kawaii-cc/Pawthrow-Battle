@@ -762,9 +762,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DecoyController
   ShowTopMostFoldoutHeaderGroup: 1
-  moveSpeed: 2
-  rotationSpeed: 15
-  lifetime: 7
+  moveSpeed: 5
+  rotationSpeed: 10
+  lifetime: 5
   spawnVFX: {fileID: 0}
   despawnVFX: {fileID: 0}
 --- !u!114 &-5625963392883215403

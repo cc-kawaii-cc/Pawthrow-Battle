@@ -5,43 +5,39 @@ using System.Collections;
 public class FallingPlatform : NetworkBehaviour
 {
     [Header("Warning Flash Settings")]
-    [Tooltip("ระยะเวลากระพริบสีแดงก่อนร่วง (วินาที)")]
     public float warningDuration = 3f;
-
-    [Tooltip("ความเร็วในการกระพริบ (ครั้งต่อวินาที)")]
     public float flashSpeed = 4f;
 
     [Header("Fall Settings")]
-    [Tooltip("ความเร็วในการตกลง")]
     public float fallSpeed = 8f;
-
-    [Tooltip("ระยะทางที่ตกลงก่อนถูกทำลาย")]
     public float destroyAfterFallDistance = 30f;
 
+    [Header("After Fall")]
+    [Tooltip("หน่วงเวลากี่วินาทีหลังร่วงถึงจุดต่ำสุด แล้วค่อยปิด GameObject")]
+    public float deactivateDelay = 0.5f;
+
     [Header("Danger Zone VFX")]
-    [Tooltip("ลาก Particle System หรือ Projector สำหรับแสดง Danger Zone บนพื้น (ไม่บังคับ)")]
     public GameObject dangerZoneIndicator;
+
+    // ── NetworkVariables ──────────────────────────────────────
     private NetworkVariable<bool> isWarning = new NetworkVariable<bool>(false);
     private NetworkVariable<bool> isFalling = new NetworkVariable<bool>(false);
 
+    // ── Private ───────────────────────────────────────────────
     private Renderer[] renderers;
-    private Color[] originalColors;
-    private Vector3 startPosition;
-    private Coroutine flashCoroutine;
+    private Color[]    originalColors;
+    private Coroutine  flashCoroutine;
 
+    // ─────────────────────────────────────────────────────────
     private void Awake()
     {
-        renderers = GetComponentsInChildren<Renderer>();
+        renderers      = GetComponentsInChildren<Renderer>();
         originalColors = new Color[renderers.Length];
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i].material.HasProperty("_Color"))
-                originalColors[i] = renderers[i].material.color;
-            else
-                originalColors[i] = Color.white;
-        }
 
-        startPosition = transform.position;
+        for (int i = 0; i < renderers.Length; i++)
+            originalColors[i] = renderers[i].material.HasProperty("_Color")
+                ? renderers[i].material.color
+                : Color.white;
     }
 
     public override void OnNetworkSpawn()
@@ -59,12 +55,12 @@ public class FallingPlatform : NetworkBehaviour
         isFalling.OnValueChanged -= OnFallingStateChanged;
     }
 
+    // =========================================================
+    //  Server — เรียกจาก MapDestructionManager
+    // =========================================================
+
     [ServerRpc(RequireOwnership = false)]
-    public void TriggerFallSequenceServerRpc()
-    {
-        if (!IsServer) return;
-        StartCoroutine(FallSequenceCoroutine());
-    }
+    public void TriggerFallSequenceServerRpc() => TriggerFallSequence();
 
     public void TriggerFallSequence()
     {
@@ -74,49 +70,77 @@ public class FallingPlatform : NetworkBehaviour
 
     private IEnumerator FallSequenceCoroutine()
     {
+        // ── Phase 1 : เตือน (กระพริบแดง) ─────────────────────
         isWarning.Value = true;
         yield return new WaitForSeconds(warningDuration);
         isWarning.Value = false;
+
+        // ── Phase 2 : ร่วง ────────────────────────────────────
         isFalling.Value = true;
+        DisableCollidersClientRpc();   // ปิด Collider → ผู้เล่นบนนั้นจะตกตาม
 
-        DisableCollidersClientRpc();
-
-        float fallDistance = 0f;
-        while (fallDistance < destroyAfterFallDistance)
+        float fallen = 0f;
+        while (fallen < destroyAfterFallDistance)
         {
             float step = fallSpeed * Time.deltaTime;
             transform.position += Vector3.down * step;
-            fallDistance += step;
+            fallen += step;
             yield return null;
         }
 
-        GetComponent<NetworkObject>().Despawn(true);
+        // ── Phase 3 : หยุดแล้วค่อยปิด ────────────────────────
+        yield return new WaitForSeconds(deactivateDelay);
+
+        // บอกทุก Client ให้ปิด GameObject ชิ้นนี้
+        DeactivatePlatformClientRpc();
+
+        // Server ปิดเองด้วย
+        gameObject.SetActive(false);
     }
 
-    private void OnWarningStateChanged(bool previous, bool current)
+    // =========================================================
+    //  ClientRpc
+    // =========================================================
+
+    /// <summary>ปิด GameObject บน Client ทุกคน ให้ซิงค์กันทั้งห้อง</summary>
+    [ClientRpc]
+    private void DeactivatePlatformClientRpc()
+    {
+        gameObject.SetActive(false);
+    }
+
+    [ClientRpc]
+    private void DisableCollidersClientRpc()
+    {
+        foreach (var col in GetComponentsInChildren<Collider>())
+            col.enabled = false;
+    }
+
+    // =========================================================
+    //  NetworkVariable Callbacks (Client-side visuals)
+    // =========================================================
+
+    private void OnWarningStateChanged(bool _, bool current)
     {
         if (current)
         {
-            if (dangerZoneIndicator != null)
-                dangerZoneIndicator.SetActive(true);
-
+            if (dangerZoneIndicator != null) dangerZoneIndicator.SetActive(true);
             flashCoroutine = StartCoroutine(FlashRedCoroutine());
         }
         else
         {
             if (flashCoroutine != null) StopCoroutine(flashCoroutine);
-            SetColor(Color.red);
+            SetColor(Color.red);   // ค้างแดงก่อนร่วง
         }
     }
 
-    private void OnFallingStateChanged(bool previous, bool current)
+    private void OnFallingStateChanged(bool _, bool current)
     {
-        if (current)
-        {
-            if (dangerZoneIndicator != null)
-                dangerZoneIndicator.SetActive(false);
-        }
+        if (current && dangerZoneIndicator != null)
+            dangerZoneIndicator.SetActive(false);
     }
+
+    // ── Helpers ──────────────────────────────────────────────
 
     private IEnumerator FlashRedCoroutine()
     {
@@ -125,25 +149,14 @@ public class FallingPlatform : NetworkBehaviour
         {
             toggle = !toggle;
             SetColor(toggle ? Color.red : Color.white);
-            float interval = 1f / flashSpeed;
-            yield return new WaitForSeconds(interval);
+            yield return new WaitForSeconds(1f / flashSpeed);
         }
     }
 
     private void SetColor(Color color)
     {
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i] != null && renderers[i].material.HasProperty("_Color"))
-                renderers[i].material.color = color;
-        }
-    }
-
-    [ClientRpc]
-    private void DisableCollidersClientRpc()
-    {
-        Collider[] cols = GetComponentsInChildren<Collider>();
-        foreach (var col in cols)
-            col.enabled = false;
+        foreach (var r in renderers)
+            if (r != null && r.material.HasProperty("_Color"))
+                r.material.color = color;
     }
 }
