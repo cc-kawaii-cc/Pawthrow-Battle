@@ -18524,8 +18524,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 71184b2b5aa6a7b48bedeeb259fd9247, type: 2}
+  m_sharedMaterial: {fileID: 3798649396546628231, guid: 71184b2b5aa6a7b48bedeeb259fd9247, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -18566,7 +18566,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
+  m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
@@ -18588,7 +18588,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -339.28162, y: 134.50735, z: -343.09277, w: -189.85693}
+  m_margin: {x: -524.6465, y: -142.79195, z: -1183.1577, w: -352.57162}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -18611,14 +18611,14 @@ RectTransform:
   m_GameObject: {fileID: 942118440}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1.9404566, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2144447001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -1}
+  m_AnchoredPosition: {x: -334, y: 202}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &942142822
@@ -31523,7 +31523,7 @@ MonoBehaviour:
   spawnInterval: 2
   spawnCenter: {x: 50, y: 0, z: 48}
   spawnAreaSize: {x: 200, y: 140}
-  spawnHeight: 4
+  spawnHeight: 3
   maxItemsOnMap: 30
 --- !u!114 &1597104614
 MonoBehaviour:
@@ -32460,9 +32460,9 @@ MonoBehaviour:
   - characterType: 1
     skillIcon: {fileID: 21300000, guid: 2ad0705136db7e84da5babca15b43903, type: 3}
   - characterType: 2
-    skillIcon: {fileID: 0}
+    skillIcon: {fileID: 21300000, guid: a649eae9c387d2c4aabba2501afa8c6c, type: 3}
   - characterType: 4
-    skillIcon: {fileID: 0}
+    skillIcon: {fileID: 21300000, guid: e6ef2824dffc1a440ac3296d8d5980a1, type: 3}
 --- !u!114 &1656886691
 MonoBehaviour:
   m_ObjectHideFlags: 0
