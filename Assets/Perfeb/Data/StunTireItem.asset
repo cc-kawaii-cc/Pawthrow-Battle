@@ -15,7 +15,7 @@ MonoBehaviour:
   damage: 10
   knockbackForce: 0
   isHeavyItem: 1
-  stunDuration: 999
+  stunDuration: 2
   destroyOnHitPlayer: 1
   destroyOnHitGround: 0
   destroyDelay: 0.1
