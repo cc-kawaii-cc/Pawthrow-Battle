@@ -651,7 +651,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 322958748615771338}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
+  m_Avatar: {fileID: 9000000, guid: 77b4e6c3cd905de498219014a7125663, type: 3}
   m_Controller: {fileID: 9100000, guid: bdd5410f4a6e081468edc7bd4420de54, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
@@ -761,7 +761,7 @@ MonoBehaviour:
   rotationSpeed: 700
   jumpForce: 5
   gravity: -9.81
-  animator: {fileID: 0}
+  animator: {fileID: 9078734415526188482}
   cameraDistance: 5
   minCameraDistance: 1.5
   maxCameraDistance: 12

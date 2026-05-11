@@ -764,7 +764,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
       propertyPath: m_Avatar
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9000000, guid: 1201bccadf792974b9d0aeb1f63ef13d, type: 3}
     - target: {fileID: 5866666021909216657, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -773,6 +773,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 4be5800b84481244698870c9218567d4, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -907,7 +911,7 @@ MonoBehaviour:
   rotationSpeed: 700
   jumpForce: 5
   gravity: -9.81
-  animator: {fileID: 0}
+  animator: {fileID: 6091249284180459995}
   cameraDistance: 5
   minCameraDistance: 1.5
   maxCameraDistance: 12
@@ -1043,6 +1047,11 @@ Transform:
 --- !u!4 &5273663109453056865 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5534136634639218475, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
+  m_PrefabInstance: {fileID: 424151292863937610}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6091249284180459995 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 9ab953fbba52cbc4c90b2d6d0f945aad, type: 3}
   m_PrefabInstance: {fileID: 424151292863937610}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &9046284311667218377 stripped

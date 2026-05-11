@@ -116,6 +116,13 @@ public class PlayerController : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         controller = GetComponent<CharacterController>();
+
+        // ══════════════════════════════════════════
+        // [เพิ่มใหม่] Auto-Find Animator ถ้ายังไม่ได้ลากใส่ใน Inspector
+        // ══════════════════════════════════════════
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
+
         if (IsOwner)
         {
             mainCamera = Camera.main; 
@@ -151,6 +158,19 @@ public class PlayerController : NetworkBehaviour
         verticalVelocity = 0f;
         impact = Vector3.zero;
         if (controller != null) controller.enabled = true;
+
+        // ══════════════════════════════════════════
+        // [เพิ่มใหม่] Reset Animator state ตอนเปลี่ยน Scene
+        // ══════════════════════════════════════════
+        if (animator != null)
+        {
+            animator.ResetTrigger("Jump");
+            animator.ResetTrigger("Throw");
+            animator.ResetTrigger("DoubleJump");
+            animator.SetFloat("Speed", 0f);
+            animator.SetBool("isShielding", false);
+            animator.SetBool("isGrounded", true);
+        }
         
         if (IsOwner)
         {
@@ -209,7 +229,7 @@ public class PlayerController : NetworkBehaviour
         if (TryGetComponent(out PlayerHealth hp) && hp.isDead) return;
 
         // ══════════════════════════════════════════
-        // ✅ เพิ่ม: อัปเดต isGrounded ทุก Frame
+        // [เพิ่มใหม่] อัปเดต isGrounded ทุก Frame
         // ══════════════════════════════════════════
         if (animator != null)
             animator.SetBool("isGrounded", controller.isGrounded);
@@ -266,10 +286,15 @@ public class PlayerController : NetworkBehaviour
 
         if (isStunned) 
         {
+            // ══════════════════════════════════════════
+            // [เพิ่มใหม่] ตอน Stun ให้ Speed = 0
+            // ══════════════════════════════════════════
+            if (animator != null)
+                animator.SetFloat("Speed", 0f);
+
             if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
             verticalVelocity += gravity * Time.deltaTime;
             controller.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
-            if (animator != null) animator.SetFloat("Speed", 0);
             return; 
         }
         
@@ -326,14 +351,14 @@ public class PlayerController : NetworkBehaviour
         }
 
         // ══════════════════════════════════════════
-        // ✅ แก้ไข: Throw — เพิ่ม Trigger
+        // [แก้ไข] Throw — เพิ่ม Trigger
         // ══════════════════════════════════════════
         if (Input.GetButtonUp("Fire1") && isCharging) 
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
-            if (animator != null) animator.SetTrigger("Throw"); // ← เพิ่ม
+            if (animator != null) animator.SetTrigger("Throw"); // [เพิ่มใหม่]
         }
         
         if (controller.isGrounded && verticalVelocity < 0) 
@@ -342,14 +367,14 @@ public class PlayerController : NetworkBehaviour
         }
         
         // ══════════════════════════════════════════
-        // ✅ แก้ไข: Jump — เพิ่ม Trigger
+        // [แก้ไข] Jump — เพิ่ม Trigger (เฉพาะตัวที่ไม่ใช่ไก่)
         // ══════════════════════════════════════════
         if (characterType != CharacterType.Chicken)
         {
             if (Input.GetButtonDown("Jump") && controller.isGrounded && !isStunned) 
             {
                 verticalVelocity = jumpForce;
-                if (animator != null) animator.SetTrigger("Jump"); // ← เพิ่ม
+                if (animator != null) animator.SetTrigger("Jump"); // [เพิ่มใหม่]
             }
         }
         verticalVelocity += gravity * Time.deltaTime;
@@ -392,7 +417,10 @@ public class PlayerController : NetworkBehaviour
         finalMovement.y = verticalVelocity; 
         controller.Move(finalMovement * Time.deltaTime);
 
-        if (animator != null && !isStunned && !isBullCharging) 
+        // ══════════════════════════════════════════
+        // [แก้ไข] Speed — อัปเดตทุก Frame (ไม่ใช่แค่ตอนขยับ)
+        // ══════════════════════════════════════════
+        if (animator != null && !isBullCharging) 
         {
             animator.SetFloat("Speed", moveInput.magnitude); 
         }
@@ -490,7 +518,9 @@ public class PlayerController : NetworkBehaviour
             jumpsRemaining--;
             TriggerJumpVFXServerRpc(); 
         
-            // ✅ แก้ไข: แยก Jump ครั้งแรก vs Double Jump
+            // ══════════════════════════════════════════
+            // [แก้ไข] แยก Jump ครั้งแรก vs Double Jump
+            // ══════════════════════════════════════════
             if (animator != null)
             {
                 if (jumpsRemaining == maxJumps - 1)
@@ -556,7 +586,7 @@ public class PlayerController : NetworkBehaviour
     void HandleFoxSkill()
     {
         if (decoyTimer > 0) return;
-        if (Input.GetKeyDown(KeyCode.LeftShift) && decoyPrefab != null && !isStunned) // เปลี่ยนปุ่มเป็น Left Shift แล้ว
+        if (Input.GetKeyDown(KeyCode.LeftShift) && decoyPrefab != null && !isStunned)
         {
             decoyTimer = decoyCooldown;
             SpawnDecoyServerRpc(transform.position, transform.rotation);
@@ -566,12 +596,10 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     void SpawnDecoyServerRpc(Vector3 pos, Quaternion rot)
     {
-        // เสก Prefab ที่สร้างใหม่ (ไม่มี PlayerController)
         GameObject go = Instantiate(decoyPrefab, pos, rot);
         NetworkObject netObj = go.GetComponent<NetworkObject>();
         netObj.Spawn();
         
-        // บังคับให้ท่าเดินทำงานตลอด
         if (go.TryGetComponent(out Animator anim))
         {
             anim.SetFloat("Speed", 1.0f); 
@@ -711,38 +739,45 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     void ActivateShieldServerRpc()
     {
-        isShieldActive.Value = true; UpdateShieldVisualClientRpc(true); 
+        isShieldActive.Value = true;
+        UpdateShieldVisualClientRpc(true); 
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void BreakShieldServerRpc()
     {
         isShieldActive.Value = false; 
-        UpdateShieldVisualClientRpc(false); // จะเรียก SetBool("isShielding", false) อัตโนมัติ
+        UpdateShieldVisualClientRpc(false);
     }
 
+    // ══════════════════════════════════════════
+    // [แก้ไข] เพิ่ม SetBool isShielding สำหรับ Dog
+    // ══════════════════════════════════════════
     [ClientRpc]
     void UpdateShieldVisualClientRpc(bool active)
     {
         if (shieldVisual != null) shieldVisual.SetActive(active); 
-        if (animator != null) animator.SetBool("isShielding", active); // ← เพิ่ม
+        if (animator != null) animator.SetBool("isShielding", active); // [เพิ่มใหม่]
     }
 
     void Dash()
     {
-        Vector3 dashDir = transform.forward; AddImpact(dashDir * dashForce); 
+        Vector3 dashDir = transform.forward;
+        AddImpact(dashDir * dashForce); 
     }
 
     [ClientRpc]
     public void ApplyStunClientRpc(float duration, ClientRpcParams rpcParams = default)
     {
-        if (!IsOwner) return; StartCoroutine(StunRoutine(duration)); 
+        if (!IsOwner) return;
+        StartCoroutine(StunRoutine(duration)); 
     }
 
     private IEnumerator StunRoutine(float duration) 
     {
         isStunned = true; 
-        isCharging = false; currentCharge = 0f;
+        isCharging = false;
+        currentCharge = 0f;
         yield return new WaitForSeconds(duration); 
         isStunned = false; 
     }
@@ -900,7 +935,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (controller != null && controller.isGrounded)
         {
-            return maxJumps; // เหยียบพื้นอยู่ = กระโดดได้เต็มแม็กซ์
+            return maxJumps;
         }
         return jumpsRemaining;
     }
