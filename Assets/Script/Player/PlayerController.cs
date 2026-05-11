@@ -208,6 +208,12 @@ public class PlayerController : NetworkBehaviour
         if (controller != null && !controller.enabled) return; 
         if (TryGetComponent(out PlayerHealth hp) && hp.isDead) return;
 
+        // ══════════════════════════════════════════
+        // ✅ เพิ่ม: อัปเดต isGrounded ทุก Frame
+        // ══════════════════════════════════════════
+        if (animator != null)
+            animator.SetBool("isGrounded", controller.isGrounded);
+
         if (SceneManager.GetActiveScene().name == "CITY")
         {
             if (Input.GetMouseButtonDown(0)) 
@@ -318,11 +324,16 @@ public class PlayerController : NetworkBehaviour
             currentCharge += Time.deltaTime; 
             currentCharge = Mathf.Clamp(currentCharge, 0, maxChargeTime);
         }
+
+        // ══════════════════════════════════════════
+        // ✅ แก้ไข: Throw — เพิ่ม Trigger
+        // ══════════════════════════════════════════
         if (Input.GetButtonUp("Fire1") && isCharging) 
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
+            if (animator != null) animator.SetTrigger("Throw"); // ← เพิ่ม
         }
         
         if (controller.isGrounded && verticalVelocity < 0) 
@@ -330,11 +341,15 @@ public class PlayerController : NetworkBehaviour
             verticalVelocity = -2f;
         }
         
+        // ══════════════════════════════════════════
+        // ✅ แก้ไข: Jump — เพิ่ม Trigger
+        // ══════════════════════════════════════════
         if (characterType != CharacterType.Chicken)
         {
             if (Input.GetButtonDown("Jump") && controller.isGrounded && !isStunned) 
             {
                 verticalVelocity = jumpForce;
+                if (animator != null) animator.SetTrigger("Jump"); // ← เพิ่ม
             }
         }
         verticalVelocity += gravity * Time.deltaTime;
@@ -475,7 +490,14 @@ public class PlayerController : NetworkBehaviour
             jumpsRemaining--;
             TriggerJumpVFXServerRpc(); 
         
-            if (animator != null) animator.SetTrigger("DoubleJump"); 
+            // ✅ แก้ไข: แยก Jump ครั้งแรก vs Double Jump
+            if (animator != null)
+            {
+                if (jumpsRemaining == maxJumps - 1)
+                    animator.SetTrigger("Jump");       // กระโดดครั้งแรก
+                else
+                    animator.SetTrigger("DoubleJump"); // กระโดดครั้งที่ 2
+            }
         }
     }
 
@@ -695,13 +717,15 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void BreakShieldServerRpc()
     {
-        isShieldActive.Value = false; UpdateShieldVisualClientRpc(false);
+        isShieldActive.Value = false; 
+        UpdateShieldVisualClientRpc(false); // จะเรียก SetBool("isShielding", false) อัตโนมัติ
     }
 
     [ClientRpc]
     void UpdateShieldVisualClientRpc(bool active)
     {
         if (shieldVisual != null) shieldVisual.SetActive(active); 
+        if (animator != null) animator.SetBool("isShielding", active); // ← เพิ่ม
     }
 
     void Dash()
@@ -838,10 +862,9 @@ public class PlayerController : NetworkBehaviour
     }
 
     // ==========================================
-    // UI COOLDOWN SYSTEM (เพิ่ม 3 ฟังก์ชันนี้เพื่อส่งค่าให้ UI)
+    // UI COOLDOWN SYSTEM
     // ==========================================
 
-    // 1. ส่งค่า % คูลดาวน์สำหรับทำหลอดวงกลมสีดำ
     public float GetSkillCooldownPercentage()
     {
         switch (characterType)
@@ -858,7 +881,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    // 2. ส่งค่าเวลาที่เหลือเป็นวินาที (สำหรับโชว์ตัวเลข)
     public float GetSkillCooldownTimeLeft()
     {
         switch (characterType)
@@ -874,7 +896,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    // 3. ส่งค่าจำนวนครั้งการกระโดด (สำหรับน้องไก่โดยเฉพาะ)
     public int GetRemainingJumps()
     {
         if (controller != null && controller.isGrounded)
