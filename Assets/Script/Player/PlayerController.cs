@@ -117,9 +117,6 @@ public class PlayerController : NetworkBehaviour
     {
         controller = GetComponent<CharacterController>();
 
-        // ══════════════════════════════════════════
-        // [เพิ่มใหม่] Auto-Find Animator ถ้ายังไม่ได้ลากใส่ใน Inspector
-        // ══════════════════════════════════════════
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
@@ -159,15 +156,15 @@ public class PlayerController : NetworkBehaviour
         impact = Vector3.zero;
         if (controller != null) controller.enabled = true;
 
-        // ══════════════════════════════════════════
-        // [เพิ่มใหม่] Reset Animator state ตอนเปลี่ยน Scene
-        // ══════════════════════════════════════════
         if (animator != null)
         {
             animator.ResetTrigger("Jump");
             animator.ResetTrigger("Throw");
             animator.ResetTrigger("DoubleJump");
-            animator.SetFloat("Speed", 0f);
+            // ══════════════════════════════════════════
+            // [แก้ไข] ใช้ Damp ตั้งแต่ Reset ด้วย
+            // ══════════════════════════════════════════
+            animator.SetFloat("Speed", 0f, 0.1f, Time.deltaTime);
             animator.SetBool("isShielding", false);
             animator.SetBool("isGrounded", true);
         }
@@ -228,9 +225,6 @@ public class PlayerController : NetworkBehaviour
         if (controller != null && !controller.enabled) return; 
         if (TryGetComponent(out PlayerHealth hp) && hp.isDead) return;
 
-        // ══════════════════════════════════════════
-        // [เพิ่มใหม่] อัปเดต isGrounded ทุก Frame
-        // ══════════════════════════════════════════
         if (animator != null)
             animator.SetBool("isGrounded", controller.isGrounded);
 
@@ -287,10 +281,10 @@ public class PlayerController : NetworkBehaviour
         if (isStunned) 
         {
             // ══════════════════════════════════════════
-            // [เพิ่มใหม่] ตอน Stun ให้ Speed = 0
+            // [แก้ไข] ตอน Stun ใช้ Damp ด้วย
             // ══════════════════════════════════════════
             if (animator != null)
-                animator.SetFloat("Speed", 0f);
+                animator.SetFloat("Speed", 0f, 0.1f, Time.deltaTime);
 
             if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
             verticalVelocity += gravity * Time.deltaTime;
@@ -350,15 +344,12 @@ public class PlayerController : NetworkBehaviour
             currentCharge = Mathf.Clamp(currentCharge, 0, maxChargeTime);
         }
 
-        // ══════════════════════════════════════════
-        // [แก้ไข] Throw — เพิ่ม Trigger
-        // ══════════════════════════════════════════
         if (Input.GetButtonUp("Fire1") && isCharging) 
         {
             isCharging = false;
             float chargeMultiplier = 1f + (currentCharge / maxChargeTime); 
             ThrowItemServerRpc(mainCamera.transform.forward, chargeMultiplier);
-            if (animator != null) animator.SetTrigger("Throw"); // [เพิ่มใหม่]
+            if (animator != null) animator.SetTrigger("Throw");
         }
         
         if (controller.isGrounded && verticalVelocity < 0) 
@@ -366,15 +357,12 @@ public class PlayerController : NetworkBehaviour
             verticalVelocity = -2f;
         }
         
-        // ══════════════════════════════════════════
-        // [แก้ไข] Jump — เพิ่ม Trigger (เฉพาะตัวที่ไม่ใช่ไก่)
-        // ══════════════════════════════════════════
         if (characterType != CharacterType.Chicken)
         {
             if (Input.GetButtonDown("Jump") && controller.isGrounded && !isStunned) 
             {
                 verticalVelocity = jumpForce;
-                if (animator != null) animator.SetTrigger("Jump"); // [เพิ่มใหม่]
+                if (animator != null) animator.SetTrigger("Jump");
             }
         }
         verticalVelocity += gravity * Time.deltaTime;
@@ -418,11 +406,11 @@ public class PlayerController : NetworkBehaviour
         controller.Move(finalMovement * Time.deltaTime);
 
         // ══════════════════════════════════════════
-        // [แก้ไข] Speed — อัปเดตทุก Frame (ไม่ใช่แค่ตอนขยับ)
+        // [แก้ไข] เพิ่ม dampTime 0.1f เพื่อแก้อาการสั่น งึกๆ
         // ══════════════════════════════════════════
         if (animator != null && !isBullCharging) 
         {
-            animator.SetFloat("Speed", moveInput.magnitude); 
+            animator.SetFloat("Speed", moveInput.magnitude, 0.1f, Time.deltaTime); 
         }
     }
 
@@ -505,9 +493,6 @@ public class PlayerController : NetworkBehaviour
         hasThrowBoost = false;
     }
 
-    // ==========================================
-    // 🐣 CHICKEN SKILL
-    // ==========================================
     void HandleChickenSkill() 
     { 
         if (controller.isGrounded) jumpsRemaining = maxJumps;
@@ -518,15 +503,12 @@ public class PlayerController : NetworkBehaviour
             jumpsRemaining--;
             TriggerJumpVFXServerRpc(); 
         
-            // ══════════════════════════════════════════
-            // [แก้ไข] แยก Jump ครั้งแรก vs Double Jump
-            // ══════════════════════════════════════════
             if (animator != null)
             {
                 if (jumpsRemaining == maxJumps - 1)
-                    animator.SetTrigger("Jump");       // กระโดดครั้งแรก
+                    animator.SetTrigger("Jump");
                 else
-                    animator.SetTrigger("DoubleJump"); // กระโดดครั้งที่ 2
+                    animator.SetTrigger("DoubleJump");
             }
         }
     }
@@ -540,9 +522,6 @@ public class PlayerController : NetworkBehaviour
         if (jumpParticle != null) jumpParticle.Play();
     }
 
-    // ==========================================
-    // 🦇 BAT SKILL
-    // ==========================================
     void HandleBatSkill()
     {
         if (Input.GetKeyDown(KeyCode.E) && echoTimer <= 0 && !isStunned)
@@ -580,9 +559,6 @@ public class PlayerController : NetworkBehaviour
         if (EchoMarkerUI.Instance != null) EchoMarkerUI.Instance.ShowMarkers(positions, ids, duration);
     }
 
-    // ==========================================
-    // 🦊 FOX SKILL
-    // ==========================================
     void HandleFoxSkill()
     {
         if (decoyTimer > 0) return;
@@ -606,9 +582,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    // ==========================================
-    // 🐻 BEAR SKILL
-    // ==========================================
     void HandleBearSkill() 
     { 
         if (rageTimer > 0) return;
@@ -639,9 +612,6 @@ public class PlayerController : NetworkBehaviour
         if (rageVFX != null) rageVFX.SetActive(active);
     }
 
-    // ==========================================
-    // 🐂 BULL SKILL
-    // ==========================================
     void HandleBullSkill() 
     { 
         if (bullChargeTimer > 0) return;
@@ -657,10 +627,7 @@ public class PlayerController : NetworkBehaviour
     }
 
     [ServerRpc]
-    void ClearChargeHitsServerRpc()
-    {
-        hitDuringCharge.Clear();
-    }
+    void ClearChargeHitsServerRpc() { hitDuringCharge.Clear(); }
 
     [ServerRpc]
     void RequestBullHitCheckServerRpc(Vector3 pos)
@@ -683,9 +650,6 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc] void StartChargeVFXServerRpc() { StartChargeVFXClientRpc(); }
     [ClientRpc] void StartChargeVFXClientRpc() { if (bullChargeVFX != null) bullChargeVFX.Play(); }
 
-    // ==========================================
-    // 🐙 OCTOPUS SKILL
-    // ==========================================
     void HandleOctopusSkill()
     {
         if (inkTimer > 0) return;
@@ -732,10 +696,6 @@ public class PlayerController : NetworkBehaviour
         }
     } 
 
-    // ==========================================
-    // OTHER SKILLS & MECHANICS
-    // ==========================================
-
     [ServerRpc]
     void ActivateShieldServerRpc()
     {
@@ -750,14 +710,11 @@ public class PlayerController : NetworkBehaviour
         UpdateShieldVisualClientRpc(false);
     }
 
-    // ══════════════════════════════════════════
-    // [แก้ไข] เพิ่ม SetBool isShielding สำหรับ Dog
-    // ══════════════════════════════════════════
     [ClientRpc]
     void UpdateShieldVisualClientRpc(bool active)
     {
         if (shieldVisual != null) shieldVisual.SetActive(active); 
-        if (animator != null) animator.SetBool("isShielding", active); // [เพิ่มใหม่]
+        if (animator != null) animator.SetBool("isShielding", active);
     }
 
     void Dash()
@@ -782,12 +739,16 @@ public class PlayerController : NetworkBehaviour
         isStunned = false; 
     }
 
-    void TryPickupItem() {
+    void TryPickupItem()
+    {
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, pickupRange);
-        foreach (var hitCollider in hitColliders) {
-            if (hitCollider.TryGetComponent(out ThrowableItem item)) {
+        foreach (var hitCollider in hitColliders)
+        {
+            if (hitCollider.TryGetComponent(out ThrowableItem item))
+            {
                 NetworkObject netObj = item.GetComponent<NetworkObject>();
-                if (netObj.IsSpawned && netObj.transform.parent == null) {
+                if (netObj.IsSpawned && netObj.transform.parent == null)
+                {
                     PickupItemServerRpc(netObj.NetworkObjectId); break;
                 }
             }
@@ -895,10 +856,6 @@ public class PlayerController : NetworkBehaviour
         if (IsOwner) SceneManager.sceneLoaded -= OnSceneLoaded;
         base.OnNetworkDespawn();
     }
-
-    // ==========================================
-    // UI COOLDOWN SYSTEM
-    // ==========================================
 
     public float GetSkillCooldownPercentage()
     {

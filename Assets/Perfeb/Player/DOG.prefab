@@ -1706,8 +1706,8 @@ Animator:
   m_GameObject: {fileID: 8422892626600285392}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: d9a1483b77bf10e4e851678ab6c2e54e, type: 3}
-  m_Controller: {fileID: 9100000, guid: 86df22564a42a494bbf5bfd93cb36135, type: 2}
-  m_CullingMode: 1
+  m_Controller: {fileID: 9100000, guid: 55b52ccfd20c5f04089b77516b161c3d, type: 2}
+  m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
@@ -1815,7 +1815,7 @@ MonoBehaviour:
   rotationSpeed: 700
   jumpForce: 5
   gravity: -9.81
-  animator: {fileID: 0}
+  animator: {fileID: 8422892626592999198}
   cameraDistance: 5
   minCameraDistance: 1.5
   maxCameraDistance: 12
