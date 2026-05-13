@@ -3199,7 +3199,7 @@ MonoBehaviour:
   - {fileID: 658522301777592603, guid: b378c8c7799eba342a7c00e83058151c, type: 3}
   - {fileID: 8422892626600285392, guid: 214e08cd5e5d74c458e2a81b7ec2c84c, type: 3}
   - {fileID: 753109795427219303, guid: c226f29b2d14f0041825d7e063d452fa, type: 3}
-  - {fileID: 322958748615771338, guid: fccceb493d3acd64aa67fd6864e44d69, type: 3}
+  - {fileID: 1396260835665841393, guid: ce9c958085dc17a49b591a904ac5f8d5, type: 3}
   waitingSceneName: WaitingScene
 --- !u!4 &733173930
 Transform:
